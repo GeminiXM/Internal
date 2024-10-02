@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import styles from "./IFees.module.css"; // Import the CSS module
 
-
 const IFeesPage = () => {
   const [iFeesData, setIFeesData] = useState([]);
   const [selectedDatabase, setSelectedDatabase] = useState("Denver");
@@ -26,6 +25,25 @@ const IFeesPage = () => {
 
     fetchIFeesData();
   }, []);
+
+  // Function to fetch data based on the selected database
+  const fetchIFeesData = async (database) => {
+    try {
+      const response = await fetch(
+        `http://localhost:9090/IFees?database=${database}`
+      );
+      const data = await response.json();
+      console.log("Fetched data:", data); // Check data format
+      setIFeesData(data);
+    } catch (error) {
+      console.error("Error fetching IFees data:", error);
+    }
+  };
+
+  // Fetch data on component mount and when database changes
+  useEffect(() => {
+    fetchIFeesData(selectedDatabase);
+  }, [selectedDatabase]);
 
   // Function to dynamically adjust column widths based on content
   useEffect(() => {
@@ -62,18 +80,24 @@ const IFeesPage = () => {
 
   // Function to determine row background color based on description match
   const getRowClass = (index) => {
-    // Find the index of the start of the current description group
-    let groupStart = index;
-    while (
-      groupStart > 0 &&
-      iFeesData[groupStart].description.trim() ===
-        iFeesData[groupStart - 1].description.trim()
-    ) {
-      groupStart--;
-    }
+    const description = iFeesData[index].description.trim();
 
-    // Calculate the group number to alternate the colors correctly
-    const groupNumber = Math.floor(groupStart / 2);
+    // Find all rows with the same description
+    const groupStart = iFeesData.findIndex(
+      (fee) => fee.description.trim() === description
+    );
+
+    // Calculate the group number by counting distinct descriptions up to this point
+    const groupNumber = iFeesData
+      .slice(0, groupStart)
+      .reduce((count, fee, i, arr) => {
+        // Count only unique descriptions
+        return arr.findIndex(
+          (f) => f.description.trim() === fee.description.trim()
+        ) === i
+          ? count + 1
+          : count;
+      }, 0);
 
     // Return the appropriate class based on the group number
     return groupNumber % 2 === 0 ? styles.White : styles.lightGoldenrodYellow;
@@ -182,17 +206,17 @@ const IFeesPage = () => {
             className={`${styles.formInput} ${styles.smallerInput}`}
           />
 
-        <label htmlFor="end_date">End Date:</label>
-        <input
-          type="date"
-          id="end_date"
-          name="end_date"
-          value={endDate}
-          onChange={handleEndDateChange}
-          className={`${styles.formInput} ${styles.smallerInput}`}
-          min={getTodayDate()} // Ensure the date picker doesn't allow past dates
-        />
-        {endDateError && <p className={styles.errorMsg}>{endDateError}</p>}
+          <label htmlFor="end_date">End Date:</label>
+          <input
+            type="date"
+            id="end_date"
+            name="end_date"
+            value={endDate}
+            onChange={handleEndDateChange}
+            className={`${styles.formInput} ${styles.smallerInput}`}
+            min={getTodayDate()} // Ensure the date picker doesn't allow past dates
+          />
+          {endDateError && <p className={styles.errorMsg}>{endDateError}</p>}
 
           <label htmlFor="membership_type">Membership Type:</label>
           <select
@@ -227,19 +251,22 @@ const IFeesPage = () => {
             </tr>
           </thead>
           <tbody>
-            {iFeesData.map((fee, index) => (
-              <tr
-                key={index}
-                className={`${styles.tableRow} ${getRowClass(index)}`}
-              >
-                <td className={styles.tableCell}>{fee.description.trim()}</td>
-                <td className={styles.tableCell}>{fee.price}</td>
-                <td className={styles.tableCell}>{formatDate(fee.end_date)}</td>
-                <td className={styles.tableCell}>
-                  {fee.membership_type.trim()}
-                </td>
-              </tr>
-            ))}
+            {Array.isArray(iFeesData) &&
+              iFeesData.map((fee, index) => (
+                <tr
+                  key={index}
+                  className={`${styles.tableRow} ${getRowClass(index)}`}
+                >
+                  <td className={styles.tableCell}>{fee.description.trim()}</td>
+                  <td className={styles.tableCell}>{fee.price}</td>
+                  <td className={styles.tableCell}>
+                    {formatDate(fee.end_date)}
+                  </td>
+                  <td className={styles.tableCell}>
+                    {fee.membership_type.trim()}
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
