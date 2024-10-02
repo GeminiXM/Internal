@@ -1,10 +1,16 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import styles from "./IFees.module.css"; // Import the CSS module
+
 
 const IFeesPage = () => {
   const [iFeesData, setIFeesData] = useState([]);
   const [selectedDatabase, setSelectedDatabase] = useState("Denver");
+  const [selectedMembershipType, setselectedMembershipType] = useState("A");
+  const [price, setPrice] = useState(""); // State for price input
+  const [priceError, setPriceError] = useState(""); // State for validation message
+  const [endDate, setEndDate] = useState(""); // State for end_date input
+  const [endDateError, setEndDateError] = useState(""); // State for end_date validation message
   const tableRef = useRef(null);
 
   useEffect(() => {
@@ -70,9 +76,7 @@ const IFeesPage = () => {
     const groupNumber = Math.floor(groupStart / 2);
 
     // Return the appropriate class based on the group number
-    return groupNumber % 2 === 0
-      ? styles.paperWhite
-      : styles.lightGoldenrodYellow;
+    return groupNumber % 2 === 0 ? styles.White : styles.lightGoldenrodYellow;
   };
 
   // Format date without converting time zones
@@ -87,6 +91,47 @@ const IFeesPage = () => {
     const ampm = date.getUTCHours() >= 12 ? "PM" : "AM";
 
     return `${month}/${day}/${year} ${hours}:${minutes}:${seconds} ${ampm}`;
+  };
+
+  // Handle price change with validation
+  const handlePriceChange = (e) => {
+    let value = e.target.value;
+
+    // Remove any $ symbol if present
+    value = value.replace(/\$/g, "");
+
+    // Validate that the value is a number or decimal less than 500
+    if (!isNaN(value) && parseFloat(value) < 500) {
+      setPrice(value);
+      setPriceError(""); // Clear any error if valid
+    } else {
+      setPrice(value);
+      setPriceError("Price must be a number or decimal less than $500");
+    }
+  };
+
+  // Function to get today's date in YYYY-MM-DD format
+  const getTodayDate = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  // Handle end_date change with validation
+  const handleEndDateChange = (e) => {
+    const value = e.target.value;
+    const today = getTodayDate();
+
+    setEndDate(value);
+
+    // Validate that the end date is today or later
+    if (value < today) {
+      setEndDateError("End Date must be today or later.");
+    } else {
+      setEndDateError(""); // Clear error if valid
+    }
   };
 
   return (
@@ -114,29 +159,53 @@ const IFeesPage = () => {
             className={styles.formInput}
           />
 
+          {/* Price input with $ sign */}
           <label htmlFor="price">Price:</label>
+          <div className={styles.priceContainer}>
+            <span className={styles.dollarSign}>$</span>
+            <input
+              type="text"
+              id="price"
+              name="price"
+              value={price}
+              onChange={handlePriceChange}
+              className={`${styles.formInput} ${styles.smallerInput}`}
+            />
+          </div>
+          {priceError && <p className={styles.errorMsg}>{priceError}</p>}
+
+          <label htmlFor="start_date">Start Date:</label>
           <input
-            type="number"
-            id="price"
-            name="price"
-            className={styles.formInput}
+            type="date"
+            id="start_date"
+            name="start_date"
+            className={`${styles.formInput} ${styles.smallerInput}`}
           />
 
-          <label htmlFor="end_date">End Date:</label>
-          <input
-            type="datetime-local"
-            id="end_date"
-            name="end_date"
-            className={styles.formInput}
-          />
+        <label htmlFor="end_date">End Date:</label>
+        <input
+          type="date"
+          id="end_date"
+          name="end_date"
+          value={endDate}
+          onChange={handleEndDateChange}
+          className={`${styles.formInput} ${styles.smallerInput}`}
+          min={getTodayDate()} // Ensure the date picker doesn't allow past dates
+        />
+        {endDateError && <p className={styles.errorMsg}>{endDateError}</p>}
 
           <label htmlFor="membership_type">Membership Type:</label>
-          <input
-            type="text"
-            id="membership_type"
-            name="membership_type"
-            className={styles.formInput}
-          />
+          <select
+            id="membership-select"
+            value={selectedMembershipType}
+            onChange={(e) => setselectedMembershipType(e.target.value)}
+            className={styles.dropdown}
+          >
+            <option value="A">All Membership Types</option>
+            <option value="I">Individual</option>
+            <option value="D">Couple</option>
+            <option value="F">Family</option>
+          </select>
 
           {/* Add submit/update buttons here */}
         </form>

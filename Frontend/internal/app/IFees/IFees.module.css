@@ -73,13 +73,41 @@
   margin-bottom: 15px;
 }
 
+/* Width of smaller Input Fields like dates, prices*/
+.smallerInput {
+  width: 150px; /* Adjust to desired width */
+}
 
-/* Background color for paper white rows */
-.paperWhite {
+
+
+/* Background color for white rows */
+.White {
   background-color: #fff; /*white*/
 }
 
 /* Background color for LightGoldenrodYellow rows */
 .lightGoldenrodYellow {
   background-color: #fafad2; /* LightGoldenrodYellow */
+}
+
+
+
+/* Container for price input */
+.priceContainer {
+  display: flex;
+  align-items: center;
+}
+
+/* Styling for the $ sign */
+.dollarSign {
+  padding-right: 5px;
+  font-size: 16px;
+}
+
+/* Validation message styling */
+.errorMsg {
+  color: red;
+  font-size: 18px;
+  font-style: italic;
+  margin-top: 5px;
 }
