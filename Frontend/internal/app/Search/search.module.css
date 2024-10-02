@@ -1,0 +1,27 @@
+.container{
+	display: flex;
+	align-items:center;
+	gap: 10ppx;
+	background-color: #142750;
+	padding: 10px;
+	border-radius: 10px;
+	width: max-content;
+
+}
+
+.input {
+	background-color: transparent ;
+	border: none;
+	color: white;
+	outline:none;
+}
+
+.input::placeholder {
+  color: white;
+  opacity: 0.6; /* Optional: Adjust the transparency */
+}
+
+.icon {
+  color: white; /* Set the color to white or any preferred color */
+  font-size: 20px; /* Adjust the size as needed */
+}

@@ -1,56 +1,68 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import styles from "./IFees.module.css"; // Import the CSS module
+import Search from "../Search/search"; // Corrected import path
+
 
 const IFeesPage = () => {
   const [iFeesData, setIFeesData] = useState([]);
+  const [filteredIFees, setFilteredIFees] = useState([]); // State for filtered data
   const [selectedDatabase, setSelectedDatabase] = useState("Denver");
   const [selectedMembershipType, setselectedMembershipType] = useState("A");
-  const [price, setPrice] = useState(""); // State for price input
-  const [priceError, setPriceError] = useState(""); // State for validation message
-  const [endDate, setEndDate] = useState(""); // State for end_date input
-  const [endDateError, setEndDateError] = useState(""); // State for end_date validation message
+  const [price, setPrice] = useState("");
+  const [priceError, setPriceError] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [endDateError, setEndDateError] = useState("");
   const tableRef = useRef(null);
 
+  // Fetch data on component mount and when database changes
   useEffect(() => {
     const fetchIFeesData = async () => {
       try {
-        const response = await fetch("http://localhost:9090/IFees");
+        const response = await fetch(
+          `http://vwbwebdev:9090/IFees?database=${selectedDatabase}`
+        );
         const data = await response.json();
+        console.log("Fetched data:", data); // Check data format
         setIFeesData(data);
+        setFilteredIFees(data); // Initialize filtered data to full data
       } catch (error) {
         console.error("Error fetching IFees data:", error);
       }
     };
 
     fetchIFeesData();
-  }, []);
+  }, [selectedDatabase]); // Depend on selectedDatabase
 
-  // Function to fetch data based on the selected database
-  const fetchIFeesData = async (database) => {
-    try {
-      const response = await fetch(
-        `http://localhost:9090/IFees?database=${database}`
+  // Function to handle search
+  const handleSearch = (searchTerm) => {
+    const filtered = iFeesData.filter((entry) => {
+      const description = entry.description
+        ? entry.description.toLowerCase()
+        : "";
+      const price = entry.price ? entry.price.toString().toLowerCase() : "";
+      const endDate = entry.end_date ? entry.end_date.toLowerCase() : "";
+      const membershipType = entry.membership_type
+        ? entry.membership_type.toLowerCase()
+        : "";
+
+      return (
+        description.includes(searchTerm.toLowerCase()) ||
+        price.includes(searchTerm.toLowerCase()) ||
+        endDate.includes(searchTerm.toLowerCase()) ||
+        membershipType.includes(searchTerm.toLowerCase())
       );
-      const data = await response.json();
-      console.log("Fetched data:", data); // Check data format
-      setIFeesData(data);
-    } catch (error) {
-      console.error("Error fetching IFees data:", error);
-    }
-  };
+    });
 
-  // Fetch data on component mount and when database changes
-  useEffect(() => {
-    fetchIFeesData(selectedDatabase);
-  }, [selectedDatabase]);
+    setFilteredIFees(filtered);
+  };
 
   // Function to dynamically adjust column widths based on content
   useEffect(() => {
     if (tableRef.current) {
       adjustColumnWidths();
     }
-  }, [iFeesData]);
+  }, [filteredIFees]); // Update based on filtered data
 
   const adjustColumnWidths = () => {
     const table = tableRef.current;
@@ -240,7 +252,9 @@ const IFeesPage = () => {
         <div className={styles.title}>
           Currently Active IFees (Enrollment) @ {selectedDatabase}
         </div>
-
+        <div className={styles.top}>
+          <Search placeholder="Search ifees..." onSearch={handleSearch} />
+        </div>
         <table ref={tableRef} className={styles.table}>
           <thead>
             <tr className={styles.tableHeader}>
@@ -250,24 +264,24 @@ const IFeesPage = () => {
               <th className={styles.tableCell}>Membership Type</th>
             </tr>
           </thead>
-          <tbody>
-            {Array.isArray(iFeesData) &&
-              iFeesData.map((fee, index) => (
-                <tr
-                  key={index}
-                  className={`${styles.tableRow} ${getRowClass(index)}`}
-                >
-                  <td className={styles.tableCell}>{fee.description.trim()}</td>
-                  <td className={styles.tableCell}>{fee.price}</td>
-                  <td className={styles.tableCell}>
-                    {formatDate(fee.end_date)}
-                  </td>
-                  <td className={styles.tableCell}>
-                    {fee.membership_type.trim()}
-                  </td>
-                </tr>
-              ))}
-          </tbody>
+<tbody>
+  {Array.isArray(filteredIFees) &&
+    filteredIFees.map((fee, index) => (
+      <tr
+        key={index}
+        className={`${styles.tableRow} ${getRowClass(index)}`}
+      >
+        <td className={styles.tableCell}>{fee.description.trim()}</td>
+        <td className={styles.tableCell}>{fee.price}</td>
+        <td className={styles.tableCell}>
+          {formatDate(fee.end_date)}
+        </td>
+        <td className={styles.tableCell}>
+          {fee.membership_type.trim()}
+        </td>
+      </tr>
+    ))}
+</tbody>
         </table>
       </div>
     </div>
