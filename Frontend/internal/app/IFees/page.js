@@ -36,6 +36,11 @@ const IFeesPage = () => {
 
   // Function to handle search
   const handleSearch = (searchTerm) => {
+    if (!searchTerm.trim()) {
+      setFilteredIFees(iFeesData); // Reset filtered data when search term is empty
+      return;
+    }
+
     const filtered = iFeesData.filter((entry) => {
       const description = entry.description
         ? entry.description.toLowerCase()
@@ -264,24 +269,24 @@ const IFeesPage = () => {
               <th className={styles.tableCell}>Membership Type</th>
             </tr>
           </thead>
-<tbody>
-  {Array.isArray(filteredIFees) &&
-    filteredIFees.map((fee, index) => (
-      <tr
-        key={index}
-        className={`${styles.tableRow} ${getRowClass(index)}`}
-      >
-        <td className={styles.tableCell}>{fee.description.trim()}</td>
-        <td className={styles.tableCell}>{fee.price}</td>
-        <td className={styles.tableCell}>
-          {formatDate(fee.end_date)}
-        </td>
-        <td className={styles.tableCell}>
-          {fee.membership_type.trim()}
-        </td>
-      </tr>
-    ))}
-</tbody>
+          <tbody>
+            {Array.isArray(filteredIFees) &&
+              filteredIFees.map((fee, index) => (
+                <tr
+                  key={index}
+                  className={`${styles.tableRow} ${getRowClass(index)}`}
+                >
+                  <td className={styles.tableCell}>{fee.description.trim()}</td>
+                  <td className={styles.tableCell}>{fee.price}</td>
+                  <td className={styles.tableCell}>
+                    {formatDate(fee.end_date)}
+                  </td>
+                  <td className={styles.tableCell}>
+                    {fee.membership_type.trim()}
+                  </td>
+                </tr>
+              ))}
+          </tbody>
         </table>
       </div>
     </div>
