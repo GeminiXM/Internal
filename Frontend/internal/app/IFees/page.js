@@ -16,6 +16,7 @@ const IFeesPage = () => {
   const [startDate, setStartDate] = useState(""); // State for start_date input
   const [endDate, setEndDate] = useState("");
   const [endDateError, setEndDateError] = useState("");
+  const [showModal, setShowModal] = useState(false); // State to control modal visibility
   const tableRef = useRef(null);
 
   // Fetch data on component mount and when database changes
@@ -130,6 +131,33 @@ FUNCTIONS ######################################################################
     return groupNumber % 2 === 0 ? styles.White : styles.lightGoldenrodYellow;
   };
 
+  // Function to handle form submission
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setShowModal(true); // Show the modal when submit is clicked
+  };
+
+  // Function to handle form reset
+  const resetForm = () => {
+    setPrice("");
+    setDescription("");
+    setStartDate("");
+    setEndDate("");
+    setEndDateError("");
+  };
+
+  // Function to handle modal cancel
+  const handleCancel = () => {
+    setShowModal(false);
+    resetForm(); // Reset all input fields
+  };
+
+  // Function to handle modal confirm
+  const handleConfirm = () => {
+    setShowModal(false);
+    // Add the code for processing form submission here, e.g., sending data to the server
+  };
+
   // Format date without converting time zones
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -171,9 +199,7 @@ FUNCTIONS ######################################################################
   const handleDescriptionChange = (e) => {
     setDescription(e.target.value);
     setDescriptionManuallyEdited(true); // Mark as manually edited
-	};
-	
-
+  };
 
   // Handle start_date and end_date changes with validation
   const handleStartDateChange = (e) => {
@@ -229,7 +255,7 @@ WEB PAGE #######################################################################
         {/* Title for the new section */}
         <h3>Enter New Enrollment Fee</h3>
 
-        <form>
+        <form onSubmit={handleSubmit}>
           {/* Price input */}
           <label htmlFor="price">Price:</label>
           <div className={styles.priceContainer}>
@@ -291,10 +317,18 @@ WEB PAGE #######################################################################
             <option value="F">Family</option>
           </select>
 
-          {/* Add submit/update buttons here */}
+          {/* Submit button */}
+          <button type="submit" className={styles.submitButton}>
+            Submit
+          </button>
         </form>
       </div>
-
+      {/* 
+#
+RIGHT PANE ################################################################################################################
+#
+#
+*/}
       {/* Right Pane: Table Display */}
       <div className={styles.rightPane}>
         <div className={styles.title}>
@@ -332,6 +366,37 @@ WEB PAGE #######################################################################
           </tbody>
         </table>
       </div>
+
+      {/*
+#
+# POPUP MODAL  ################################################################################################################
+# #
+*/}
+      {/* Modal for confirmation */}
+      {showModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <h3>
+              Please confirm you want to enter this new initiation enrollment
+              fee:
+            </h3>
+            <p>Database: {selectedDatabase}</p>
+            <p>Description: {description}</p>
+            <p>Price: ${price}</p>
+            <p>Start Date: {startDate}</p>
+            <p>End Date: {endDate}</p>
+            <p>Membership Type: {selectedMembershipType}</p>
+            <div className={styles.modalButtons}>
+              <button onClick={handleConfirm} className={styles.confirmButton}>
+                Confirm
+              </button>
+              <button onClick={handleCancel} className={styles.cancelButton}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -111,3 +111,62 @@
   font-style: italic;
   margin-top: 5px;
 }
+
+
+
+/* Modal Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 400px;
+  text-align: center;
+}
+
+.modalButtons {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 20px;
+}
+
+.confirmButton {
+  background-color: green;
+  color: white;
+  padding:```css
+  10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.cancelButton {
+  background-color: red;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.submitButton {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: blue;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
