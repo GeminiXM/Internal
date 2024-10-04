@@ -42,32 +42,30 @@ export const getIFees = async (req, res, next) => {
   console.log("Entering getIFees middleware");
 
   // Get the database parameter from the frontend request
-  const { database } = req.query; // Get the database parameter from query
+  const { database } = req.query;
   let dbServer;
 
   try {
-    dbServer = getDBServerName(database); // Map to correct linked server name
+    dbServer = getDBServerName(database);
   } catch (err) {
     console.error("Invalid database selected:", err);
     return res.status(400).json({ message: "Invalid database selected" });
   }
 
-  // Construct the SQL query dynamically based on the selected database
-  const sqlQuery = `
-    DECLARE @qryGetIFees NVARCHAR(MAX);
-    SET @qryGetIFees = N'EXECUTE PROCEDURE web_proc_GetIFees ()';
-    EXEC (@qryGetIFees) AT ${dbServer};
-  `;
-
   try {
     console.log("Waiting on getConnection in db controllers file IFees");
-    req.pool = await getConnection(); // Obtain the connection pool
+    req.pool = await getConnection();
 
-    const result = await req.pool.request().query(sqlQuery);
+    // Read the SQL query from the file
+    const sqlQuery = readSQLFile("database/select_web_proc_GetIFees.sql");
+
+    // Replace the placeholder with the actual server name dynamically
+    const formattedSQLQuery = sqlQuery.replace(/BOSS_Denver/g, dbServer);
+
+    const result = await req.pool.request().query(formattedSQLQuery);
 
     if (result.recordset.length > 0) {
       console.log("SQL Query in getIFee has been read", result.recordset);
-      // Send the data as JSON response
       return res.status(200).json(result.recordset);
     } else {
       console.log(`IFees not found, error 1`);

@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef } from "react";
 import styles from "./IFees.module.css"; // Import the CSS module
 import Search from "../Search/search"; // Corrected import path
 
-
 const IFeesPage = () => {
   const [iFeesData, setIFeesData] = useState([]);
   const [filteredIFees, setFilteredIFees] = useState([]); // State for filtered data
@@ -11,6 +10,10 @@ const IFeesPage = () => {
   const [selectedMembershipType, setselectedMembershipType] = useState("A");
   const [price, setPrice] = useState("");
   const [priceError, setPriceError] = useState("");
+  const [description, setDescription] = useState(""); // New state for description
+  const [descriptionManuallyEdited, setDescriptionManuallyEdited] =
+    useState(false); // Track if description was manually changed
+  const [startDate, setStartDate] = useState(""); // State for start_date input
   const [endDate, setEndDate] = useState("");
   const [endDateError, setEndDateError] = useState("");
   const tableRef = useRef(null);
@@ -33,6 +36,13 @@ const IFeesPage = () => {
 
     fetchIFeesData();
   }, [selectedDatabase]); // Depend on selectedDatabase
+
+  /* 
+#
+FUNCTIONS ################################################################################################################
+#
+#
+*/
 
   // Function to handle search
   const handleSearch = (searchTerm) => {
@@ -134,7 +144,7 @@ const IFeesPage = () => {
     return `${month}/${day}/${year} ${hours}:${minutes}:${seconds} ${ampm}`;
   };
 
-  // Handle price change with validation
+  // Handle price change with validation and update description if not manually edited
   const handlePriceChange = (e) => {
     let value = e.target.value;
 
@@ -145,35 +155,57 @@ const IFeesPage = () => {
     if (!isNaN(value) && parseFloat(value) < 500) {
       setPrice(value);
       setPriceError(""); // Clear any error if valid
+
+      // Update description only if it was not manually edited or price is empty
+      if (!descriptionManuallyEdited || description === "") {
+        setDescription(`$${value} IFee Special`);
+        setDescriptionManuallyEdited(false); // Reset manually edited flag
+      }
     } else {
       setPrice(value);
       setPriceError("Price must be a number or decimal less than $500");
     }
   };
 
-  // Function to get today's date in YYYY-MM-DD format
-  const getTodayDate = () => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
+  // Handle manual changes to description
+  const handleDescriptionChange = (e) => {
+    setDescription(e.target.value);
+    setDescriptionManuallyEdited(true); // Mark as manually edited
+	};
+	
 
-  // Handle end_date change with validation
-  const handleEndDateChange = (e) => {
+
+  // Handle start_date and end_date changes with validation
+  const handleStartDateChange = (e) => {
     const value = e.target.value;
-    const today = getTodayDate();
+    setStartDate(value);
 
-    setEndDate(value);
-
-    // Validate that the end date is today or later
-    if (value < today) {
-      setEndDateError("End Date must be today or later.");
+    // Ensure start date is prior to the end date
+    if (endDate && value >= endDate) {
+      setEndDateError("Start Date must be before End Date.");
     } else {
       setEndDateError(""); // Clear error if valid
     }
   };
+
+  const handleEndDateChange = (e) => {
+    const value = e.target.value;
+    setEndDate(value);
+
+    // Ensure end date is after the start date
+    if (startDate && value <= startDate) {
+      setEndDateError("End Date must be after Start Date.");
+    } else {
+      setEndDateError(""); // Clear error if valid
+    }
+  };
+
+  /* 
+#
+WEB PAGE ################################################################################################################
+#
+#
+*/
 
   return (
     <div className={styles.container}>
@@ -191,16 +223,14 @@ const IFeesPage = () => {
           <option value="NMSW">NMSW</option>
         </select>
 
-        <form>
-          <label htmlFor="description">Description:</label>
-          <input
-            type="text"
-            id="description"
-            name="description"
-            className={styles.formInput}
-          />
+        {/* Separator */}
+        <hr style={{ margin: "20px 0", borderColor: "#ccc" }} />
 
-          {/* Price input with $ sign */}
+        {/* Title for the new section */}
+        <h3>Enter New Enrollment Fee</h3>
+
+        <form>
+          {/* Price input */}
           <label htmlFor="price">Price:</label>
           <div className={styles.priceContainer}>
             <span className={styles.dollarSign}>$</span>
@@ -215,11 +245,24 @@ const IFeesPage = () => {
           </div>
           {priceError && <p className={styles.errorMsg}>{priceError}</p>}
 
+          {/* Description field */}
+          <label htmlFor="description">Description:</label>
+          <input
+            type="text"
+            id="description"
+            name="description"
+            value={description}
+            onChange={handleDescriptionChange}
+            className={styles.formInput}
+          />
+
           <label htmlFor="start_date">Start Date:</label>
           <input
             type="date"
             id="start_date"
             name="start_date"
+            value={startDate}
+            onChange={handleStartDateChange}
             className={`${styles.formInput} ${styles.smallerInput}`}
           />
 
@@ -231,7 +274,7 @@ const IFeesPage = () => {
             value={endDate}
             onChange={handleEndDateChange}
             className={`${styles.formInput} ${styles.smallerInput}`}
-            min={getTodayDate()} // Ensure the date picker doesn't allow past dates
+            min={startDate} // Ensure the date picker doesn't allow dates before the start date
           />
           {endDateError && <p className={styles.errorMsg}>{endDateError}</p>}
 
