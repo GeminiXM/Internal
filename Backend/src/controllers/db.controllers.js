@@ -5,9 +5,7 @@ import fs from "fs-extra";
 import path from "path";
 import sql from "mssql";
 import { fileURLToPath } from "url";
-import { log, error } from "console";
-import { request } from "http";
-import { json } from "stream/consumers";
+
 
 console.log("Here we are in the db controllers file");
 
@@ -78,3 +76,7 @@ export const getIFees = async (req, res, next) => {
       .json({ message: "Error 500: Internal server error in controller" });
   }
 };
+
+
+
+

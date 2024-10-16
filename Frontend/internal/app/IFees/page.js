@@ -218,8 +218,11 @@ FUNCTIONS ######################################################################
     const value = e.target.value;
     setEndDate(value);
 
-    // Ensure end date is after the start date
-    if (startDate && value <= startDate) {
+    // Ensure end date is today or in the future
+    const today = new Date().toISOString().split("T")[0];
+    if (value < today) {
+      setEndDateError("End Date must be today or later.");
+    } else if (startDate && value <= startDate) {
       setEndDateError("End Date must be after Start Date.");
     } else {
       setEndDateError(""); // Clear error if valid
@@ -300,7 +303,7 @@ WEB PAGE #######################################################################
             value={endDate}
             onChange={handleEndDateChange}
             className={`${styles.formInput} ${styles.smallerInput}`}
-            min={startDate} // Ensure the date picker doesn't allow dates before the start date
+            min={new Date().toISOString().split("T")[0]} // Prevent dates before today
           />
           {endDateError && <p className={styles.errorMsg}>{endDateError}</p>}
 
