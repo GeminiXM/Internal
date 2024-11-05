@@ -3,7 +3,7 @@
 import express from "express";
 import Routes from "./routes/db.routes.js";
 import cors from "cors";
-//import bodyParser from "body-parser";
+
 
 const app = express();
 
@@ -18,4 +18,4 @@ app.use("/",Routes);
 console.log("The app.js file has been read");
 
 export default app;
-import { json } from "express";
+

@@ -19,24 +19,36 @@ const IFeesPage = () => {
   const [showModal, setShowModal] = useState(false); // State to control modal visibility
   const tableRef = useRef(null);
 
-  // Fetch data on component mount and when database changes
-  useEffect(() => {
-    const fetchIFeesData = async () => {
-      try {
-        const response = await fetch(
-          `http://vwbwebdev:9090/IFees?database=${selectedDatabase}`
-        );
-        const data = await response.json();
-        console.log("Fetched data:", data); // Check data format
-        setIFeesData(data);
-        setFilteredIFees(data); // Initialize filtered data to full data
-      } catch (error) {
-        console.error("Error fetching IFees data:", error);
-      }
-    };
 
-    fetchIFeesData();
-  }, [selectedDatabase]); // Depend on selectedDatabase
+
+  // Fetch data on component mount and when database changes
+useEffect(() => {
+  const fetchIFeesData = async () => {
+    try {
+
+      if (!selectedDatabase) {
+        console.error("selectedDatabase is undefined");
+      }
+
+      const response = await fetch(
+        `http://localhost:9090/IFees?database=${selectedDatabase}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch IFees data");
+      }
+
+      const data = await response.json();
+      console.log("Fetched data:", data);
+      setIFeesData(data);
+      setFilteredIFees(data);
+    } catch (error) {
+      console.error("Error fetching IFees data:", error);
+    }
+  };
+  fetchIFeesData();
+}, [selectedDatabase]);
+
 
   /* 
 #
@@ -153,9 +165,36 @@ FUNCTIONS ######################################################################
   };
 
   // Function to handle modal confirm
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     setShowModal(false);
-    // Add the code for processing form submission here, e.g., sending data to the server
+
+    try {
+      const response = await fetch(`http://vwbwebdev:9090/IFees`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          description,
+          startDate,
+          endDate,
+          price,
+          enteredBy: "frontend_user", // Assuming there's a value for this field
+          membershipType: selectedMembershipType,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to insert new IFees record.");
+      }
+
+      // Refresh data after successful insertion
+      fetchIFeesData();
+
+      console.log("Insert successful");
+    } catch (error) {
+      console.error("Error inserting IFees:", error);
+    }
   };
 
   // Format date without converting time zones

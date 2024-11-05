@@ -1,0 +1,23 @@
+# Frontend Configuration
+REACT_APP_API_URL=http://vwbwebdev:9090
+
+# Express Server Configuration
+EXPRESS_PORT=9090
+EXPRESS_HOST_URL=http://vwbWebDev:9090
+
+# Informix Database Connection Details
+
+# ODBC DSNs
+INFORMIX_DNV_DSN=DENVERDSN  # Replace with your ODBC DSN name for Denver
+INFORMIX_MAC_DSN=mac_dsn     # Replace with your ODBC DSN name for MAC
+INFORMIX_NM_DSN=nmsw_dsn     # Replace with your ODBC DSN name for New Mexico
+
+# User credentials
+INFORMIX_DNV_USER=informix
+INFORMIX_DNV_PASSWORD="B0SS#rul3s"
+
+INFORMIX_MAC_USER=informix
+INFORMIX_MAC_PASSWORD="B0SS#rul3s"
+
+INFORMIX_NM_USER=informix
+INFORMIX_NM_PASSWORD="B0SS#rul3s"

@@ -17,10 +17,10 @@
     "express": "^4.21.0",
     "fs-extra": "^11.2.0",
     "fs-path": "^0.0.25",
+    "ibm_db": "^3.2.4",
     "internal": "file:",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.0",
-    "mssql": "^11.0.1",
     "path": "^0.12.7"
   },
   "devDependencies": {

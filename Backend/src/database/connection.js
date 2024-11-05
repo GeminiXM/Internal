@@ -1,49 +1,98 @@
+// connection.js - This file handles connecting to one of the Informix databases based on the user's selection.
+
 "use strict";
 
-import sql from "mssql";
+import ibmdb from "ibm_db"; // Ensure ibmdb is imported
 import dotenv from "dotenv";
 
-dotenv.config();
+dotenv.config(); // Load environment variables from .env
 
-console.log("Environment variables:");
-console.log(`SQL_USER: ${process.env.SQL_USER}`);
-console.log(`SQL_PASSWORD: ${process.env.SQL_PASSWORD}`);
-console.log(`SQL_SERVER: ${process.env.SQL_SERVER}`);
-console.log(`SQL_DATABASE: ${process.env.SQL_DATABASE}`);
-console.log(`SQL_PORT: ${process.env.SQL_PORT}`);
-console.log(`SQL_ENCRYPT: ${process.env.SQL_ENCRYPT}`);
+// Function to create a connection string for Informix
+const createConnectionString = (databaseConfig) => {
+  const {
+    server,
+    database,
+    host,
+    port,
+    protocol,
+    user,
+    password,
+    authentication,
+  } = databaseConfig;
 
-const dbSettings = {
-  user: process.env.SQL_USER,
-  password: process.env.SQL_PASSWORD,
-  server: process.env.SQL_SERVER,
-  database: process.env.SQL_DATABASE,
-  domain: "corpnet.com",
-  options: {
-    encrypt: false,
-    trustServerCertificate: true,
-  },
+  const connectionString = `SERVER=${server};DATABASE=${database};HOSTNAME=${host};AUTHENTICATION=${authentication};PORT=${port};PROTOCOL=${protocol};UID=${user};PWD=${password};`;
+  console.log("Generated Connection String:", connectionString);
+  return connectionString;
 };
 
-console.log("dbSettings has been set in connection.js");
-
-let pool;
-
-export const getConnection = async () => {
-  if (!pool) {
-    console.log(
-      `Attempting to connect to database ${dbSettings.database} on ${dbSettings.server}...`
-    );
-    try {
-      pool = await sql.connect(dbSettings);
-      console.log(
-        "Finished connecting to database via getConnection in the connection.js file"
-      );
-    } catch (error) {
-      console.error("Error connecting to database:", error);
-      throw error;
-    }
+// Function to get database settings based on selected database
+const getDatabaseConfig = (selectedDatabase) => {
+  console.log("Getting database configuration for:", selectedDatabase);
+  switch (selectedDatabase) {
+    case "Denver":
+      return {
+        server: process.env.INFORMIX_DNV_SERVER,
+        database: process.env.INFORMIX_DNV_DATABASE,
+        host: process.env.INFORMIX_DNV_HOST,
+        port: process.env.INFORMIX_DNV_PORT,
+        protocol: process.env.INFORMIX_DNV_PROTOCOL,
+        user: process.env.INFORMIX_DNV_USER,
+        password: process.env.INFORMIX_DNV_PASSWORD,
+        authentication: process.env.INFORMIX_DNV_AUTHENTICATION,
+      };
+    case "MAC":
+      return {
+        server: process.env.INFORMIX_MAC_SERVER,
+        database: process.env.INFORMIX_MAC_DATABASE,
+        host: process.env.INFORMIX_MAC_HOST,
+        port: process.env.INFORMIX_MAC_PORT,
+        protocol: process.env.INFORMIX_MAC_PROTOCOL,
+        user: process.env.INFORMIX_MAC_USER,
+        password: process.env.INFORMIX_MAC_PASSWORD,
+        authentication: process.env.INFORMIX_MAC_AUTHENTICATION,
+      };
+    case "NMSW":
+      return {
+        server: process.env.INFORMIX_NM_SERVER,
+        database: process.env.INFORMIX_NM_DATABASE,
+        host: process.env.INFORMIX_NM_HOST,
+        port: process.env.INFORMIX_NM_PORT,
+        protocol: process.env.INFORMIX_NM_PROTOCOL,
+        user: process.env.INFORMIX_NM_USER,
+        password: process.env.INFORMIX_NM_PASSWORD,
+        authentication: process.env.INFORMIX_NM_AUTHENTICATION,
+      };
+    default:
+      throw new Error("Invalid database selected");
   }
-  return pool;
 };
-import { config } from "dotenv";
+
+// Function to connect to Informix database
+export const getConnection = async (selectedDatabase) => {
+  console.log("Connecting to the selected database:", selectedDatabase);
+  const databaseConfig = getDatabaseConfig(selectedDatabase);
+
+  try {
+    const connStr = createConnectionString(databaseConfig);
+    console.log("Attempting to open connection...");
+    const connection = await ibmdb.open(connStr);
+    console.log("Connection successful to the database:", selectedDatabase);
+    return connection;
+  } catch (error) {
+    console.error("Error connecting to the Informix database:", error);
+    throw error;
+  }
+};
+
+//Example usage (uncomment below for testing)
+//run node src\database\connection.js from Backend
+/* getConnection("Denver")
+  .then((conn) => {
+    console.log("Connection object:", conn);
+    conn.close(() => {
+      console.log("Connection closed.");
+    });
+  })
+  .catch((err) => {
+    console.error("Failed to connect:", err);
+  }); */
