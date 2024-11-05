@@ -19,13 +19,43 @@ const IFeesPage = () => {
   const [showModal, setShowModal] = useState(false); // State to control modal visibility
   const tableRef = useRef(null);
 
-
-
   // Fetch data on component mount and when database changes
-useEffect(() => {
+  useEffect(() => {
+    const fetchIFeesData = async () => {
+      try {
+        if (!selectedDatabase) {
+          console.error("selectedDatabase is undefined");
+        }
+
+        const response = await fetch(
+          `http://localhost:9090/IFees?database=${selectedDatabase}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch IFees data");
+        }
+
+        const data = await response.json();
+        console.log("Fetched data:", data);
+        setIFeesData(data);
+        setFilteredIFees(data);
+      } catch (error) {
+        console.error("Error fetching IFees data:", error);
+      }
+    };
+    fetchIFeesData();
+  }, [selectedDatabase]);
+
+  /* 
+#
+FUNCTIONS ################################################################################################################
+#
+#
+*/
+
+  // Move the fetchIFeesData function to be declared outside useEffect, so it can be called anywhere in the component
   const fetchIFeesData = async () => {
     try {
-
       if (!selectedDatabase) {
         console.error("selectedDatabase is undefined");
       }
@@ -46,16 +76,6 @@ useEffect(() => {
       console.error("Error fetching IFees data:", error);
     }
   };
-  fetchIFeesData();
-}, [selectedDatabase]);
-
-
-  /* 
-#
-FUNCTIONS ################################################################################################################
-#
-#
-*/
 
   // Function to handle search
   const handleSearch = (searchTerm) => {
@@ -166,22 +186,34 @@ FUNCTIONS ######################################################################
 
   // Function to handle modal confirm
   const handleConfirm = async () => {
+    console.log("Confirm button clicked. Preparing to send data...");
+
     setShowModal(false);
 
     try {
-      const response = await fetch(`http://vwbwebdev:9090/IFees`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          description,
-          startDate,
-          endDate,
-          price,
-          enteredBy: "frontend_user", // Assuming there's a value for this field
-          membershipType: selectedMembershipType,
-        }),
+      const response = await fetch(
+        `http://vwbwebdev:9090/IFees?database=${selectedDatabase}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            description,
+            startDate,
+            endDate,
+            price,
+            enteredBy: "frontend_user", // Assuming there's a value for this field
+          }),
+        }
+      );
+
+      console.log("Request sent to backend:", {
+        description,
+        startDate,
+        endDate,
+        price,
+        enteredBy: "frontend_user",
       });
 
       if (!response.ok) {
@@ -189,7 +221,7 @@ FUNCTIONS ######################################################################
       }
 
       // Refresh data after successful insertion
-      fetchIFeesData();
+      await fetchIFeesData();
 
       console.log("Insert successful");
     } catch (error) {

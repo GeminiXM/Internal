@@ -1,15 +1,14 @@
-// routes.js
+// db.routes.js
 "use strict";
 import express from "express";
-import {
-  getIFees
-} from "../controllers/db.controllers.js";
+import { getIFees, insertIFee } from "../controllers/db.controllers.js";
 
 const router = express.Router();
 
-// Route for fetching iFees data
+// Route for fetching IFees data
 router.get("/IFees", getIFees);
 
-
+// Route for inserting IFees data
+router.post("/IFees", insertIFee);
 
 export default router;
