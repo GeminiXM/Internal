@@ -378,7 +378,8 @@ WEB PAGE #######################################################################
           />
           {endDateError && <p className={styles.errorMsg}>{endDateError}</p>}
 
-          <label htmlFor="membership_type">Membership Type:</label>
+          {/* If want to add selecting a specific Membership Type */}
+          {/*           <label htmlFor="membership_type">Membership Type:</label>
           <select
             id="membership-select"
             value={selectedMembershipType}
@@ -389,7 +390,7 @@ WEB PAGE #######################################################################
             <option value="I">Individual</option>
             <option value="D">Couple</option>
             <option value="F">Family</option>
-          </select>
+          </select> */}
 
           {/* Submit button */}
           <button type="submit" className={styles.submitButton}>
@@ -417,7 +418,7 @@ RIGHT PANE #####################################################################
               <th className={styles.tableCell}>Description</th>
               <th className={styles.tableCell}>Price</th>
               <th className={styles.tableCell}>End Date</th>
-              <th className={styles.tableCell}>Membership Type</th>
+              {/* <th className={styles.tableCell}>Membership Type</th> */}
             </tr>
           </thead>
           <tbody>
@@ -432,9 +433,11 @@ RIGHT PANE #####################################################################
                   <td className={styles.tableCell}>
                     {formatDate(fee.end_date)}
                   </td>
+                  {/*
                   <td className={styles.tableCell}>
                     {fee.membership_type.trim()}
                   </td>
+                  */}
                 </tr>
               ))}
           </tbody>
@@ -459,7 +462,7 @@ RIGHT PANE #####################################################################
             <p>Price: ${price}</p>
             <p>Start Date: {startDate}</p>
             <p>End Date: {endDate}</p>
-            <p>Membership Type: {selectedMembershipType}</p>
+            {/* <p>Membership Type: {selectedMembershipType}</p> */}
             <div className={styles.modalButtons}>
               <button onClick={handleConfirm} className={styles.confirmButton}>
                 Confirm

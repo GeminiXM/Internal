@@ -4,6 +4,8 @@ import { getConnection } from "../database/connection.js";
 import fs from "fs-extra";
 import path from "path";
 import { fileURLToPath } from "url";
+import { authenticateUser, isUserInGroup } from "../authorization/adAuth.js";
+import os from "os"; // Import os module to get local username
 
 // Obtain the directory name of the current module
 const __filename = fileURLToPath(import.meta.url);
@@ -68,6 +70,10 @@ export const insertIFee = async (req, res, next) => {
       .json({ message: "Error 400: Database not selected." });
   }
 
+  // Get the current username from the operating system
+  const username = os.userInfo().username;
+  console.log("Detected local username:", username);
+
   console.log("Received data to insert:", {
     description,
     startDate,
@@ -78,6 +84,17 @@ export const insertIFee = async (req, res, next) => {
   console.log("Database selected:", database);
 
   try {
+    // Authenticate the user
+    await authenticateUser(username, password);
+
+    // Verify if the user is part of the required security group
+    const isMember = await isUserInGroup(username, "IFees");
+    if (!isMember) {
+      return res
+        .status(403)
+        .json({ message: "User is not authorized to perform this action" });
+    }
+
     const connection = await getConnection(database);
 
     // Construct the SQL query to insert a new IFees record
@@ -101,10 +118,8 @@ export const insertIFee = async (req, res, next) => {
     });
   } catch (err) {
     console.error("Error connecting to the Informix database:", err);
-    return res
-      .status(500)
-      .json({
-        message: "Error 500: Internal server error in insert controller",
-      });
+    return res.status(500).json({
+      message: "Error 500: Internal server error in insert controller",
+    });
   }
 };
