@@ -28,7 +28,7 @@ const IFeesPage = () => {
         }
 
         const response = await fetch(
-          `http://localhost:9090/IFees?database=${selectedDatabase}`
+          `http://vwbwebdev:9090/IFees?database=${selectedDatabase}`
         );
 
         if (!response.ok) {
@@ -61,7 +61,7 @@ FUNCTIONS ######################################################################
       }
 
       const response = await fetch(
-        `http://localhost:9090/IFees?database=${selectedDatabase}`
+        `http://vwbwebdev:9090/IFees?database=${selectedDatabase}`
       );
 
       if (!response.ok) {
