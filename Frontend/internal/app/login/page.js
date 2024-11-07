@@ -57,18 +57,32 @@ const CredentialForm = () => {
       <form onSubmit={handleSubmit}>
         <h3>Please enter your Wellbridge Computer Login and Password:</h3>
 
-        <div>
-          <label htmlFor="username">Username:</label>
+        {/* Username Field */}
+        <div
+          style={{
+            marginBottom: "15px",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <label htmlFor="username" style={{ marginRight: "10px" }}>
+            Username:
+          </label>
           <input
             type="text"
             id="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
+            style={{ marginRight: "10px" }}
           />
+          <h5 style={{ margin: 0, fontWeight: "normal" }}>
+            (usually first initial last name)
+          </h5>
         </div>
 
-        <div>
+        {/* Password Field */}
+        <div style={{ marginBottom: "15px" }}>
           <label htmlFor="password">Password:</label>
           <input
             type="password"
@@ -79,8 +93,12 @@ const CredentialForm = () => {
           />
         </div>
 
-        <button type="submit">Authenticate</button>
+        {/* Authenticate Button */}
+        <div style={{ marginBottom: "15px" }}>
+          <button type="submit">Authenticate</button>
+        </div>
       </form>
+
       {error && <p style={{ color: "red" }}>{error}</p>}
       {message && <p style={{ color: "green" }}>{message}</p>}
     </div>
