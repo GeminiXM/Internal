@@ -23,6 +23,7 @@ export const getIFees = async (req, res, next) => {
   console.log("Entering getIFees middleware");
 
   const { database } = req.query;
+  console.log("Selected Database:", database); // Log selected database
 
   try {
     console.log("Waiting on getConnection in db controllers file IFees");
@@ -30,24 +31,18 @@ export const getIFees = async (req, res, next) => {
 
     // Read the SQL query from the file
     const sqlQuery = readSQLFile("database/select_web_proc_GetIFees.sql");
+    console.log("Executing SQL Query:", sqlQuery); // Log the SQL query being executed
 
     // Execute the query
     connection.query(sqlQuery, (err, result) => {
       connection.close(); // Close the connection once the query is executed
       if (err) {
         console.error("Error executing query:", err);
-        return res.status(500).json({
-          message: "Error 500: Internal server error in controller",
-        });
+        return res.status(500).json({ message: "Error in executing query" });
       }
 
-      if (result.length > 0) {
-        console.log("SQL Query in getIFee has been read", result);
-        return res.status(200).json(result);
-      } else {
-        console.log(`IFees not found, error 1`);
-        return res.status(404).json({ message: `IFees not found` });
-      }
+      console.log("Query result:", result); // Log the query result before responding
+      res.status(200).json(result.length > 0 ? result : []);
     });
   } catch (err) {
     console.error("Error connecting to the Informix database:", err);

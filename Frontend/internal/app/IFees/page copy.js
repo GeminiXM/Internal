@@ -1,14 +1,9 @@
 "use client";
-
 import React, { useState, useEffect, useRef } from "react";
-import CredentialForm from "../login/page.js";
-import Modal from "react-modal";
 import styles from "./IFees.module.css"; // Import the CSS module
 import Search from "../Search/search"; // Corrected import path
 
 const IFeesPage = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [iFeesData, setIFeesData] = useState([]);
   const [filteredIFees, setFilteredIFees] = useState([]); // State for filtered data
   const [selectedDatabase, setSelectedDatabase] = useState("Denver");
@@ -24,26 +19,32 @@ const IFeesPage = () => {
   const [showModal, setShowModal] = useState(false); // State to control modal visibility
   const tableRef = useRef(null);
 
-  // Function to handle opening the login modal
-  const openModal = () => {
-    setIsModalOpen(true);
-  };
-
-  // Function to handle closing the login modal
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
-
-  // Function to handle successful authentication
-  const handleAuthenticationSuccess = () => {
-    setIsAuthenticated(true);
-    closeModal();
-  };
-
   // Fetch data on component mount and when database changes
   useEffect(() => {
-    fetchIFeesData(); // Call fetchIFeesData unconditionally
-  }, [selectedDatabase]); // Remove isAuthenticated from dependency array
+    const fetchIFeesData = async () => {
+      try {
+        if (!selectedDatabase) {
+          console.error("selectedDatabase is undefined");
+        }
+
+        const response = await fetch(
+          `http://vwbwebdev:9090/IFees?database=${selectedDatabase}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch IFees data");
+        }
+
+        const data = await response.json();
+        console.log("Fetched data:", data);
+        setIFeesData(data);
+        setFilteredIFees(data);
+      } catch (error) {
+        console.error("Error fetching IFees data:", error);
+      }
+    };
+    fetchIFeesData();
+  }, [selectedDatabase]);
 
   /* 
 #
@@ -55,7 +56,10 @@ FUNCTIONS ######################################################################
   // Move the fetchIFeesData function to be declared outside useEffect, so it can be called anywhere in the component
   const fetchIFeesData = async () => {
     try {
-      console.log("Attempting to fetch IFees data..."); // Add this line
+      if (!selectedDatabase) {
+        console.error("selectedDatabase is undefined");
+      }
+
       const response = await fetch(
         `http://vwbwebdev:9090/IFees?database=${selectedDatabase}`
       );
@@ -65,13 +69,11 @@ FUNCTIONS ######################################################################
       }
 
       const data = await response.json();
-      console.log("Fetched data:", data); // Log received data
-     
+      console.log("Fetched data:", data);
       setIFeesData(data);
       setFilteredIFees(data);
     } catch (error) {
       console.error("Error fetching IFees data:", error);
-      alert("Error fetching IFees data. Check console for details.");
     }
   };
 
@@ -324,79 +326,84 @@ WEB PAGE #######################################################################
         {/* Separator */}
         <hr style={{ margin: "20px 0", borderColor: "#ccc" }} />
 
-        {/* Button for New Enrollment */}
-        <button
-          onClick={openModal}
-          style={{ fontSize: "1.2em", fontWeight: "bold" }}
-        >
-          Enter New Enrollment
-        </button>
+        {/* Title for the new section */}
+        <h3>Enter New Enrollment Fee</h3>
 
-        {/* Input Fields and Submit Button (visible after authentication) */}
-        {isAuthenticated && (
-          <form onSubmit={handleSubmit} style={{ marginTop: "20px" }}>
-            {/* Price input */}
-            <label htmlFor="price">Price:</label>
-            <div className={styles.priceContainer}>
-              <span className={styles.dollarSign}>$</span>
-              <input
-                type="text"
-                id="price"
-                name="price"
-                value={price}
-                onChange={handlePriceChange}
-                className={`${styles.formInput} ${styles.smallerInput}`}
-              />
-            </div>
-            {priceError && <p className={styles.errorMsg}>{priceError}</p>}
-
-            {/* Description field */}
-            <label htmlFor="description">Description:</label>
+        <form onSubmit={handleSubmit}>
+          {/* Price input */}
+          <label htmlFor="price">Price:</label>
+          <div className={styles.priceContainer}>
+            <span className={styles.dollarSign}>$</span>
             <input
               type="text"
-              id="description"
-              name="description"
-              value={description}
-              onChange={handleDescriptionChange}
-              className={styles.formInput}
-            />
-
-            <label htmlFor="start_date">Start Date:</label>
-            <input
-              type="date"
-              id="start_date"
-              name="start_date"
-              value={startDate}
-              onChange={handleStartDateChange}
+              id="price"
+              name="price"
+              value={price}
+              onChange={handlePriceChange}
               className={`${styles.formInput} ${styles.smallerInput}`}
             />
+          </div>
+          {priceError && <p className={styles.errorMsg}>{priceError}</p>}
 
-            <label htmlFor="end_date">End Date:</label>
-            <input
-              type="date"
-              id="end_date"
-              name="end_date"
-              value={endDate}
-              onChange={handleEndDateChange}
-              className={`${styles.formInput} ${styles.smallerInput}`}
-              min={new Date().toISOString().split("T")[0]} // Prevent dates before today
-            />
-            {endDateError && <p className={styles.errorMsg}>{endDateError}</p>}
+          {/* Description field */}
+          <label htmlFor="description">Description:</label>
+          <input
+            type="text"
+            id="description"
+            name="description"
+            value={description}
+            onChange={handleDescriptionChange}
+            className={styles.formInput}
+          />
 
-            {/* Submit button */}
-            <button type="submit" className={styles.submitButton}>
-              Submit
-            </button>
-          </form>
-        )}
+          <label htmlFor="start_date">Start Date:</label>
+          <input
+            type="date"
+            id="start_date"
+            name="start_date"
+            value={startDate}
+            onChange={handleStartDateChange}
+            className={`${styles.formInput} ${styles.smallerInput}`}
+          />
+
+          <label htmlFor="end_date">End Date:</label>
+          <input
+            type="date"
+            id="end_date"
+            name="end_date"
+            value={endDate}
+            onChange={handleEndDateChange}
+            className={`${styles.formInput} ${styles.smallerInput}`}
+            min={new Date().toISOString().split("T")[0]} // Prevent dates before today
+          />
+          {endDateError && <p className={styles.errorMsg}>{endDateError}</p>}
+
+          {/* If want to add selecting a specific Membership Type */}
+          {/*           <label htmlFor="membership_type">Membership Type:</label>
+          <select
+            id="membership-select"
+            value={selectedMembershipType}
+            onChange={(e) => setselectedMembershipType(e.target.value)}
+            className={styles.dropdown}
+          >
+            <option value="A">All Membership Types</option>
+            <option value="I">Individual</option>
+            <option value="D">Couple</option>
+            <option value="F">Family</option>
+          </select> */}
+
+          {/* Submit button */}
+          <button type="submit" className={styles.submitButton}>
+            Submit
+          </button>
+        </form>
       </div>
-
       {/* 
-      #
-      RIGHT PANE ################################################################################################################
-      #
-      #
-      */}
+#
+RIGHT PANE ################################################################################################################
+#
+#
+*/}
       {/* Right Pane: Table Display */}
       <div className={styles.rightPane}>
         <div className={styles.title}>
@@ -411,6 +418,7 @@ WEB PAGE #######################################################################
               <th className={styles.tableCell}>Description</th>
               <th className={styles.tableCell}>Price</th>
               <th className={styles.tableCell}>End Date</th>
+              {/* <th className={styles.tableCell}>Membership Type</th> */}
             </tr>
           </thead>
           <tbody>
@@ -425,26 +433,47 @@ WEB PAGE #######################################################################
                   <td className={styles.tableCell}>
                     {formatDate(fee.end_date)}
                   </td>
+                  {/*
+                  <td className={styles.tableCell}>
+                    {fee.membership_type.trim()}
+                  </td>
+                  */}
                 </tr>
               ))}
           </tbody>
         </table>
       </div>
 
-      {/* Modal for Login */}
-      <Modal
-        isOpen={isModalOpen}
-        onRequestClose={closeModal}
-        contentLabel="Authentication Modal"
-        className={styles.modalContent}
-        overlayClassName={styles.modalOverlay}
-      >
-        <h3>Please log in to proceed</h3>
-        <CredentialForm onSuccess={handleAuthenticationSuccess} />
-        <button onClick={closeModal} className={styles.cancelButton}>
-          Cancel
-        </button>
-      </Modal>
+      {/*
+#
+# POPUP MODAL  ################################################################################################################
+# #
+*/}
+      {/* Modal for confirmation */}
+      {showModal && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <h3>
+              Please confirm you want to enter this new initiation enrollment
+              fee:
+            </h3>
+            <p>Database: {selectedDatabase}</p>
+            <p>Description: {description}</p>
+            <p>Price: ${price}</p>
+            <p>Start Date: {startDate}</p>
+            <p>End Date: {endDate}</p>
+            {/* <p>Membership Type: {selectedMembershipType}</p> */}
+            <div className={styles.modalButtons}>
+              <button onClick={handleConfirm} className={styles.confirmButton}>
+                Confirm
+              </button>
+              <button onClick={handleCancel} className={styles.cancelButton}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
