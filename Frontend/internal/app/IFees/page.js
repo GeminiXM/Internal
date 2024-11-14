@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import CredentialForm from "../login/page.js";
 import Modal from "react-modal";
 import styles from "./IFees.module.css"; // Import the CSS module
+import loginStyles from "../login/login.module.css"; // Import login-specific CSS for modal styling
 import Search from "../Search/search"; // Corrected import path
 
 const IFeesPage = () => {
@@ -36,8 +37,8 @@ const IFeesPage = () => {
 
   // Function to handle successful authentication
   const handleAuthenticationSuccess = () => {
-    setIsAuthenticated(true);
-    closeModal();
+    setIsAuthenticated(true); // This should enable the input fields
+    setIsModalOpen(false); // This should close the modal
   };
 
   // Fetch data on component mount and when database changes
@@ -66,7 +67,7 @@ FUNCTIONS ######################################################################
 
       const data = await response.json();
       console.log("Fetched data:", data); // Log received data
-     
+
       setIFeesData(data);
       setFilteredIFees(data);
     } catch (error) {
@@ -164,7 +165,7 @@ FUNCTIONS ######################################################################
   // Function to handle form submission
   const handleSubmit = (e) => {
     e.preventDefault();
-    setShowModal(true); // Show the modal when submit is clicked
+    setShowModal(true); // Show the modal when Submit is clicked
   };
 
   // Function to handle form reset
@@ -197,6 +198,7 @@ FUNCTIONS ######################################################################
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
+            database: selectedDatabase, // Ensure this is included
             description,
             startDate,
             endDate,
@@ -325,10 +327,7 @@ WEB PAGE #######################################################################
         <hr style={{ margin: "20px 0", borderColor: "#ccc" }} />
 
         {/* Button for New Enrollment */}
-        <button
-          onClick={openModal}
-          style={{ fontSize: "1.2em", fontWeight: "bold" }}
-        >
+        <button onClick={openModal} className={styles.enrollmentButton}>
           Enter New Enrollment
         </button>
 
@@ -411,6 +410,7 @@ WEB PAGE #######################################################################
               <th className={styles.tableCell}>Description</th>
               <th className={styles.tableCell}>Price</th>
               <th className={styles.tableCell}>End Date</th>
+              <th className={styles.tableCell}>Membership Type</th>
             </tr>
           </thead>
           <tbody>
@@ -425,23 +425,70 @@ WEB PAGE #######################################################################
                   <td className={styles.tableCell}>
                     {formatDate(fee.end_date)}
                   </td>
+                  <td className={styles.tableCell}>
+                    {fee.membership_type.trim()}
+                  </td>
                 </tr>
               ))}
           </tbody>
         </table>
       </div>
 
-      {/* Modal for Login */}
+      {/* Confirmation Modal for Submit */}
+      {showModal && (
+        <Modal
+          isOpen={showModal}
+          onRequestClose={() => setShowModal(false)}
+          contentLabel="Confirm Submission"
+          className={styles.modalContent}
+          overlayClassName={styles.modalOverlay}
+        >
+          <h3 className={styles.modalTitle}>Confirm Submission</h3>
+          <p className={styles.modalDescription}>Please review your entries:</p>
+          <ul className={styles.modalList}>
+            <li>
+              <strong>Database:</strong> {selectedDatabase}
+            </li>
+            <li>
+              <strong>Description:</strong> {description}
+            </li>
+            <li>
+              <strong>Price:</strong> {price}
+            </li>
+            <li>
+              <strong>Start Date:</strong> {startDate}
+            </li>
+            <li>
+              <strong>End Date:</strong> {endDate}
+            </li>
+          </ul>
+          <div className={styles.modalButtons}>
+            <button onClick={handleConfirm} className={styles.confirmButton}>
+              Confirm
+            </button>
+            <button onClick={handleCancel} className={styles.cancelButton}>
+              Cancel
+            </button>
+          </div>
+        </Modal>
+      )}
+
+      {/* Modal for Login uses the login\page.js*/}
       <Modal
         isOpen={isModalOpen}
         onRequestClose={closeModal}
         contentLabel="Authentication Modal"
-        className={styles.modalContent}
-        overlayClassName={styles.modalOverlay}
+        className={loginStyles.modalContent} // Use login styles for modal
+        overlayClassName={loginStyles.modalOverlay}
       >
-        <h3>Please log in to proceed</h3>
+        {/* Heading in modal */}
+        <h3 className={loginStyles.loginHeader}>Please log in to proceed</h3>
+
+        {/* CredentialForm handles the login submission internally */}
         <CredentialForm onSuccess={handleAuthenticationSuccess} />
-        <button onClick={closeModal} className={styles.cancelButton}>
+
+        {/* Only Cancel button here for modal close */}
+        <button onClick={closeModal} className={loginStyles.cancelButton}>
           Cancel
         </button>
       </Modal>

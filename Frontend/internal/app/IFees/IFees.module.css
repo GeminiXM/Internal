@@ -115,6 +115,39 @@
 
 
 /* Modal Styles */
+
+/* Title styling for the confirmation modal */
+.modalTitle {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #343a40; /* Dark gray color for contrast */
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+/* Paragraph styling for the modal description */
+.modalDescription {
+  font-size: 1em;
+  color: #6c757d; /* Muted color for subtext */
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+/* List styling for modal entries with spacing and larger text */
+.modalList {
+  list-style-type: none;
+  padding: 0;
+  text-align: left;
+  font-size: 1.1em; /* Increase the font size slightly */
+  color: #343a40;
+  line-height: 1.6; /* Add line spacing for readability */
+}
+
+.modalList li {
+  margin: 10px 0; /* Add more vertical spacing between each line */
+}
+
+
 .modalOverlay {
   position: fixed;
   top: 0;
@@ -169,4 +202,42 @@
   border: none;
   border-radius: 5px;
   cursor: pointer;
+}
+
+/* Styling for Login button in modal to match the enrollment button */
+.loginButton {
+  font-size: 1.2em; /* Make the button text larger */
+  font-weight: bold;
+  background-color: #0082b5; /* Matching background color */
+  color: #f5f5f5; /* Soft white text */
+  border: 2px solid #ffffff; /* White border */
+  padding: 12px 24px; /* Increase padding for a larger appearance */
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.loginButton:hover {
+  background-color: #006c90; /* Darker shade on hover */
+}
+
+
+
+.enrollmentButton {
+  font-size: 1.2em;
+  font-weight: bold;
+  background-color: #0082b5;
+  color: #f5f5f5; /* Soft white text */
+  border: 2px solid #ffffff; /* White border */
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.enrollmentButton:hover {
+  background-color: #006c90; /* Darker shade for hover effect */
+}
+
+
+.enrollmentButton:hover {
+  background-color: #006c90; /* Darker shade for hover effect */
 }

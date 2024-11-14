@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
+import styles from "./login.module.css";
 
-const CredentialForm = () => {
+const CredentialForm = ({ onSuccess }) => {
+  // Accept onSuccess as a prop
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
@@ -31,6 +33,7 @@ const CredentialForm = () => {
       if (response.ok) {
         const data = await response.json();
         setMessage(data.message);
+        onSuccess(); // Call onSuccess to notify parent of successful authentication
       } else {
         const data = await response.json();
         if (response.status === 401) {
@@ -55,14 +58,16 @@ const CredentialForm = () => {
   return (
     <div>
       <form onSubmit={handleSubmit}>
-        <h3>Please enter your Wellbridge Computer Login and Password:</h3>
+        <h3 className={styles.loginHeader}>
+          Please enter your Wellbridge Computer Login and Password:
+        </h3>
 
         {/* Username Field */}
         <div
           style={{
             marginBottom: "15px",
             display: "flex",
-            alignItems: "center",
+            alignItems: "left",
           }}
         >
           <label htmlFor="username" style={{ marginRight: "10px" }}>
@@ -95,7 +100,7 @@ const CredentialForm = () => {
 
         {/* Authenticate Button */}
         <div style={{ marginBottom: "15px" }}>
-          <button type="submit">Authenticate</button>
+          <button type="submit" className={styles.loginButton}>Login</button>
         </div>
       </form>
 

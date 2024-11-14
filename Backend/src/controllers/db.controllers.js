@@ -55,8 +55,8 @@ export const getIFees = async (req, res, next) => {
 // Function to insert a new IFees record
 export const insertIFee = async (req, res, next) => {
   console.log("Entering insertIFee middleware");
-  const { description, startDate, endDate, price, enteredBy } = req.body;
-  const { database } = req.query; // Fetch the selected database from query parameters
+  const { description, startDate, endDate, price, enteredBy, database } =
+    req.body;
 
   if (!database) {
     console.error("Database not selected. Cannot proceed with insertion.");
@@ -64,10 +64,6 @@ export const insertIFee = async (req, res, next) => {
       .status(400)
       .json({ message: "Error 400: Database not selected." });
   }
-
-  // Get the current username from the operating system
-  const username = os.userInfo().username;
-  console.log("Detected local username:", username);
 
   console.log("Received data to insert:", {
     description,
@@ -79,17 +75,6 @@ export const insertIFee = async (req, res, next) => {
   console.log("Database selected:", database);
 
   try {
-    // Authenticate the user
-    await authenticateUser(username, password);
-
-    // Verify if the user is part of the required security group
-    const isMember = await isUserInGroup(username, "IFees");
-    if (!isMember) {
-      return res
-        .status(403)
-        .json({ message: "User is not authorized to perform this action" });
-    }
-
     const connection = await getConnection(database);
 
     // Construct the SQL query to insert a new IFees record

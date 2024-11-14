@@ -1,0 +1,56 @@
+/* Styling for the login form header */
+.loginHeader {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #343a40;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Styling for Login button in modal to match the enrollment button */
+.loginButton {
+  font-size: 1.2em; /* Make the button text larger */
+  font-weight: bold;
+  background-color: #0082b5; /* Matching background color */
+  color: #f5f5f5; /* Soft white text */
+  border: 2px solid #ffffff; /* White border */
+  padding: 12px 24px; /* Increase padding for a larger appearance */
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.loginButton:hover {
+  background-color: #006c90; /* Darker shade on hover */
+}
+
+/* Smaller, secondary styling for the Cancel button */
+.cancelButton {
+  background-color: red;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1em;
+}
+
+.modalContent {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 400px;
+  text-align: left;
+}
+
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
