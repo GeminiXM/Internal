@@ -1,8 +1,11 @@
 import ActiveDirectory from "activedirectory2";
+import jwt from "jsonwebtoken"; // Import jwt for token generation/verification
 import dotenv from "dotenv";
 
 // Load environment variables from .env file
 dotenv.config();
+
+const JWT_SECRET = process.env.JWT_SECRET || "MySuperSecretKey";
 
 /* // Log the loaded environment variables (sanitizing passwords)
 console.log("Active Directory Config:");
@@ -101,3 +104,20 @@ export const isUserInIFeesGroup = async (username) => {
     throw error;
   }
 };
+
+// Middleware for verifying the JWT token
+export const verifyToken = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1]; // Get token from "Bearer <token>" 
+
+  if (!token) return res.status(401).json({ message: "Token not provided" });
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err)
+      return res.status(403).json({ message: "Invalid or expired token" });
+    req.user = user; // Attach user info to request
+    next();
+  });
+};
+
+

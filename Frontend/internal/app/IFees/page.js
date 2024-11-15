@@ -7,13 +7,16 @@ import styles from "./IFees.module.css"; // Import the CSS module
 import loginStyles from "../login/login.module.css"; // Import login-specific CSS for modal styling
 import Search from "../Search/search"; // Corrected import path
 
+// Set the app element for Modal
+Modal.setAppElement("body"); // Use the main app element for accessibility (adjust the selector if needed)
+
 const IFeesPage = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [iFeesData, setIFeesData] = useState([]);
   const [filteredIFees, setFilteredIFees] = useState([]); // State for filtered data
   const [selectedDatabase, setSelectedDatabase] = useState("Denver");
-  const [selectedMembershipType, setselectedMembershipType] = useState("A");
+  const [enteredBy, setEnteredBy] = useState("");
   const [price, setPrice] = useState("");
   const [priceError, setPriceError] = useState("");
   const [description, setDescription] = useState(""); // New state for description
@@ -25,26 +28,13 @@ const IFeesPage = () => {
   const [showModal, setShowModal] = useState(false); // State to control modal visibility
   const tableRef = useRef(null);
 
-  // Function to handle opening the login modal
-  const openModal = () => {
-    setIsModalOpen(true);
-  };
-
-  // Function to handle closing the login modal
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
-
-  // Function to handle successful authentication
-  const handleAuthenticationSuccess = () => {
-    setIsAuthenticated(true); // This should enable the input fields
-    setIsModalOpen(false); // This should close the modal
-  };
-
-  // Fetch data on component mount and when database changes
+  // Check for token on component mount and set authenticated state
+  // Remove token verification logic on mount
   useEffect(() => {
-    fetchIFeesData(); // Call fetchIFeesData unconditionally
-  }, [selectedDatabase]); // Remove isAuthenticated from dependency array
+    fetchIFeesData(); // Call fetchIFeesData without checking token
+  }, [selectedDatabase]);
+
+ 
 
   /* 
 #
@@ -75,6 +65,32 @@ FUNCTIONS ######################################################################
       alert("Error fetching IFees data. Check console for details.");
     }
   };
+
+  // Function to handle opening the login modal
+  const openModal = () => {
+    setIsModalOpen(true);
+  };
+
+  // Function to handle closing the login modal
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setEnteredBy(""); // Reset enteredBy state on modal close
+  };
+
+  // Function to handle successful authentication
+  const handleAuthenticationSuccess = (token, username) => {
+    console.log("Authentication Success: Token:", token, "Username:", username); // Log to confirm the token and username are correct
+    localStorage.setItem("authToken", token); // Store token locally
+    localStorage.setItem("username", username);
+    setIsAuthenticated(true); // This should enable the input fields
+    setEnteredBy(username); // Store the logged-in username
+    setIsModalOpen(false); // This should close the modal
+  };
+
+  // Fetch data on component mount and when database changes
+  useEffect(() => {
+    fetchIFeesData(); // Call fetchIFeesData unconditionally
+  }, [selectedDatabase]); // Remove isAuthenticated from dependency array
 
   // Function to handle search
   const handleSearch = (searchTerm) => {
@@ -189,6 +205,9 @@ FUNCTIONS ######################################################################
 
     setShowModal(false);
 
+    const token = localStorage.getItem("authToken");
+    const enteredBy = localStorage.getItem("username"); // Retrieve stored username
+
     try {
       const response = await fetch(
         `http://vwbwebdev:9090/IFees?database=${selectedDatabase}`,
@@ -196,6 +215,7 @@ FUNCTIONS ######################################################################
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             database: selectedDatabase, // Ensure this is included
@@ -203,7 +223,7 @@ FUNCTIONS ######################################################################
             startDate,
             endDate,
             price,
-            enteredBy: "frontend_user", // Assuming there's a value for this field
+            enteredBy, // Use the stored username
           }),
         }
       );
@@ -213,7 +233,7 @@ FUNCTIONS ######################################################################
         startDate,
         endDate,
         price,
-        enteredBy: "frontend_user",
+        enteredBy,
       });
 
       if (!response.ok) {
