@@ -241,3 +241,25 @@
 .enrollmentButton:hover {
   background-color: #006c90; /* Darker shade for hover effect */
 }
+
+
+.deleteButton {
+  background-color: #b50020; /* Complementary red */
+  color: white; /* Contrast for text */
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.deleteButton:hover {
+  background-color: #800016; /* Darker shade on hover */
+}
+
+.deleteButton:disabled {
+  background-color: #d6d6d6; /* Gray for disabled state */
+  color: #a0a0a0; /* Gray text for disabled state */
+  cursor: not-allowed;
+}

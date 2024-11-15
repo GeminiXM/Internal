@@ -26,15 +26,16 @@ const IFeesPage = () => {
   const [endDate, setEndDate] = useState("");
   const [endDateError, setEndDateError] = useState("");
   const [showModal, setShowModal] = useState(false); // State to control modal visibility
+  const [showDeleteMode, setShowDeleteMode] = useState(false);
+  const [selectedRows, setSelectedRows] = useState([]);
   const tableRef = useRef(null);
+  const [deleteModeIntent, setDeleteModeIntent] = useState(false);
 
-  // Check for token on component mount and set authenticated state
+
   // Remove token verification logic on mount
   useEffect(() => {
     fetchIFeesData(); // Call fetchIFeesData without checking token
   }, [selectedDatabase]);
-
- 
 
   /* 
 #
@@ -78,19 +79,51 @@ FUNCTIONS ######################################################################
   };
 
   // Function to handle successful authentication
-  const handleAuthenticationSuccess = (token, username) => {
-    console.log("Authentication Success: Token:", token, "Username:", username); // Log to confirm the token and username are correct
-    localStorage.setItem("authToken", token); // Store token locally
-    localStorage.setItem("username", username);
-    setIsAuthenticated(true); // This should enable the input fields
-    setEnteredBy(username); // Store the logged-in username
-    setIsModalOpen(false); // This should close the modal
+const handleAuthenticationSuccess = (token, username) => {
+  console.log("Authentication Success: Token:", token, "Username:", username); // Log to confirm the token and username are correct
+  localStorage.setItem("authToken", token); // Store token locally
+  localStorage.setItem("username", username);
+  setIsAuthenticated(true); // This should enable the input fields
+  setEnteredBy(username); // Store the logged-in username
+  setIsModalOpen(false); // This should close the modal
+
+  if (deleteModeIntent) {
+    setShowDeleteMode(true); // Enable delete mode if delete was intended
+    setDeleteModeIntent(false); // Reset intent
+  }
+};
+
+
+
+  const validateToken = (token) => {
+    try {
+      const payloadBase64 = token.split(".")[1]; // Extract the payload part of the JWT
+      const decodedPayload = JSON.parse(atob(payloadBase64)); // Decode from Base64
+
+      // Check if the token has expired
+      const currentTime = Math.floor(Date.now() / 1000); // Current time in seconds
+      if (decodedPayload.exp && decodedPayload.exp > currentTime) {
+        return true; // Token is still valid
+      }
+    } catch (error) {
+      console.error("Invalid token format or decoding error:", error);
+    }
+    return false; // Token is invalid or expired
   };
 
+
   // Fetch data on component mount and when database changes
-  useEffect(() => {
-    fetchIFeesData(); // Call fetchIFeesData unconditionally
-  }, [selectedDatabase]); // Remove isAuthenticated from dependency array
+useEffect(() => {
+  const token = localStorage.getItem("authToken");
+
+  if (token && validateToken(token)) {
+    setIsAuthenticated(true); // Enable input fields if token is valid
+  } else {
+    localStorage.removeItem("authToken"); // Clear invalid/expired token
+    setIsAuthenticated(false); // Ensure input fields are hidden
+  }
+}, []);
+
 
   // Function to handle search
   const handleSearch = (searchTerm) => {
@@ -320,6 +353,32 @@ FUNCTIONS ######################################################################
     }
   };
 
+  // Function to handle delete button click
+const handleDeleteButtonClick = () => {
+  const token = localStorage.getItem("authToken");
+
+  if (!token || !validateToken(token)) {
+    alert("Authentication required. Please log in.");
+    setDeleteModeIntent(true); // Track that delete mode was intended
+    openModal();
+    return;
+  }
+
+  setShowDeleteMode(true); // Enable delete mode if authenticated
+};
+
+
+
+
+  // Function to handle row selection
+  const handleRowSelect = (index) => {
+    if (selectedRows.includes(index)) {
+      setSelectedRows(selectedRows.filter((i) => i !== index));
+    } else {
+      setSelectedRows([...selectedRows, index]);
+    }
+  };
+
   /* 
 #
 WEB PAGE ################################################################################################################
@@ -421,12 +480,26 @@ WEB PAGE #######################################################################
         <div className={styles.title}>
           Currently Active IFees (Enrollment) @ {selectedDatabase}
         </div>
-        <div className={styles.top}>
+        <div
+          className={styles.top}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
           <Search placeholder="Search ifees..." onSearch={handleSearch} />
+          <button
+            onClick={handleDeleteButtonClick}
+            className={styles.deleteButton}
+          >
+            Delete
+          </button>
         </div>
         <table ref={tableRef} className={styles.table}>
           <thead>
             <tr className={styles.tableHeader}>
+              {showDeleteMode && <th className={styles.tableCell}>Select</th>}
               <th className={styles.tableCell}>Description</th>
               <th className={styles.tableCell}>Price</th>
               <th className={styles.tableCell}>End Date</th>
@@ -440,6 +513,15 @@ WEB PAGE #######################################################################
                   key={index}
                   className={`${styles.tableRow} ${getRowClass(index)}`}
                 >
+                  {showDeleteMode && (
+                    <td className={styles.tableCell}>
+                      <input
+                        type="checkbox"
+                        checked={selectedRows.includes(index)}
+                        onChange={() => handleRowSelect(index)}
+                      />
+                    </td>
+                  )}
                   <td className={styles.tableCell}>{fee.description.trim()}</td>
                   <td className={styles.tableCell}>{fee.price}</td>
                   <td className={styles.tableCell}>
