@@ -1,4 +1,6 @@
-// app/page.js
+// File: Frontend/internal/app/page.js
+import MainPage from "./MainPage/page";
+
 export default function Home() {
-  return <h1>Hello, Next.js with App Router!</h1>;
+  return <MainPage />;
 }

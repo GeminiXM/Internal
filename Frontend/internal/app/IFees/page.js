@@ -32,10 +32,11 @@ const IFeesPage = () => {
   const [deleteModeIntent, setDeleteModeIntent] = useState(false);
 
 
-  // Remove token verification logic on mount
   useEffect(() => {
-    fetchIFeesData(); // Call fetchIFeesData without checking token
-  }, [selectedDatabase]);
+    if (isAuthenticated) {
+      fetchIFeesData(); // Fetch data only if authenticated
+    }
+  }, [selectedDatabase, isAuthenticated]);
 
   /* 
 #
@@ -45,27 +46,43 @@ FUNCTIONS ######################################################################
 */
 
   // Move the fetchIFeesData function to be declared outside useEffect, so it can be called anywhere in the component
-  const fetchIFeesData = async () => {
-    try {
-      console.log("Attempting to fetch IFees data..."); // Add this line
-      const response = await fetch(
-        `http://vwbwebdev:9090/IFees?database=${selectedDatabase}`
-      );
+const fetchIFeesData = async () => {
+  const token = localStorage.getItem("authToken");
+  if (!token) {
+    setIsAuthenticated(false);
+    return;
+  }
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch IFees data");
+  try {
+    console.log("Attempting to fetch IFees data..."); // Add this line
+    const response = await fetch(
+      `http://vwbwebdev:9090/IFees?database=${selectedDatabase}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // Include token for authenticated request
+        },
       }
+    );
 
-      const data = await response.json();
-      console.log("Fetched data:", data); // Log received data
-
-      setIFeesData(data);
-      setFilteredIFees(data);
-    } catch (error) {
-      console.error("Error fetching IFees data:", error);
-      alert("Error fetching IFees data. Check console for details.");
+    if (!response.ok) {
+      throw new Error("Failed to fetch IFees data");
     }
-  };
+
+    const data = await response.json();
+    console.log("Fetched data:", data); // Log received data
+
+    setIFeesData(data);
+    setFilteredIFees(data);
+  } catch (error) {
+    console.error("Error fetching IFees data:", error);
+    alert("Error fetching IFees data. Check console for details.");
+  }
+};
+
+
+
 
   // Function to handle opening the login modal
   const openModal = () => {
@@ -113,16 +130,18 @@ const handleAuthenticationSuccess = (token, username) => {
 
 
   // Fetch data on component mount and when database changes
-useEffect(() => {
-  const token = localStorage.getItem("authToken");
+  useEffect(() => {
+    const authToken = localStorage.getItem("authToken");
+    const storedUsername = localStorage.getItem("username");
 
-  if (token && validateToken(token)) {
-    setIsAuthenticated(true); // Enable input fields if token is valid
-  } else {
-    localStorage.removeItem("authToken"); // Clear invalid/expired token
-    setIsAuthenticated(false); // Ensure input fields are hidden
-  }
-}, []);
+    if (authToken && validateToken(authToken)) {
+      setIsAuthenticated(true);
+      setEnteredBy(storedUsername);
+    } else {
+      setIsAuthenticated(false);
+      localStorage.removeItem("authToken");
+    }
+  }, []);
 
 
   // Function to handle search
