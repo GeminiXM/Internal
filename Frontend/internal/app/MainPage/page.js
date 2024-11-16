@@ -22,9 +22,8 @@ const MainPage = () => {
   }, []);
 
   const handleLoginSuccess = (token, username) => {
-    localStorage.setItem("authToken", token); // Save the token to localStorage
-    localStorage.setItem("username", username); // Save the username to localStorage
     setIsAuthenticated(true);
+    localStorage.setItem("username", username);
     setUsername(username);
     setShowLoginModal(false);
   };
@@ -36,21 +35,26 @@ const MainPage = () => {
   return (
     <div className={styles.mainContainer}>
       <header className={styles.header}>
-        <h1>Wellbridge Internal</h1>
-        {isAuthenticated && (
-          <div className={styles.usernameDisplay}>Welcome, {username}</div>
-        )}
-        {!isAuthenticated && (
-          <button className={styles.loginButton} onClick={handleLoginClick}>
-            Login
-          </button>
-        )}
+        <h1 className={styles.logo}>Wellbridge Internal</h1>
+        <div className={styles.authContainer}>
+          {isAuthenticated ? (
+            <div className={styles.usernameDisplay}>{username}</div>
+          ) : (
+            <button className={styles.loginButton} onClick={handleLoginClick}>
+              Login
+            </button>
+          )}
+        </div>
       </header>
       <main className={styles.mainContent}>
-        <div className={styles.buttonContainer}>
-          <Link href="/IFees">
-            <button className={styles.ifeesButton}>Go to IFees Page</button>
-          </Link>
+        <div className={styles.linksContainer}>
+          <h2 className={styles.sectionTitle}>Quick Links</h2>
+          <nav className={styles.navLinksContainer}>
+            <Link href="/IFees" className={styles.linkButton}>
+              IFees Enrollments
+            </Link>
+            {/* Future links can be added here */}
+          </nav>
         </div>
       </main>
       {showLoginModal && (
