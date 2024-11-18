@@ -30,7 +30,16 @@ const IFeesPage = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const tableRef = useRef(null);
   const [deleteModeIntent, setDeleteModeIntent] = useState(false);
+  const [activeTab, setActiveTab] = useState("Active"); //Tabs
+  // Filter rows based on the selected tab
+  const activeRows = filteredIFees.filter(
+    (fee) => fee.end_date >= new Date().toISOString().split("T")[0]
+  );
+  const inactiveRows = filteredIFees.filter(
+    (fee) => fee.end_date < new Date().toISOString().split("T")[0]
+  );
 
+  const rowsToDisplay = activeTab === "Active" ? activeRows : inactiveRows;
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -46,43 +55,45 @@ FUNCTIONS ######################################################################
 */
 
   // Move the fetchIFeesData function to be declared outside useEffect, so it can be called anywhere in the component
-const fetchIFeesData = async () => {
-  const token = localStorage.getItem("authToken");
-  if (!token) {
-    setIsAuthenticated(false);
-    return;
-  }
-
-  try {
-    console.log("Attempting to fetch IFees data..."); // Add this line
-    const response = await fetch(
-      `http://vwbwebdev:9090/IFees?database=${selectedDatabase}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // Include token for authenticated request
-        },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch IFees data");
+  const fetchIFeesData = async () => {
+    const token = localStorage.getItem("authToken");
+    if (!token) {
+      setIsAuthenticated(false);
+      return;
     }
 
-    const data = await response.json();
-    console.log("Fetched data:", data); // Log received data
+    try {
+      console.log("Attempting to fetch IFees data..."); // Add this line
+      const response = await fetch(
+        `http://vwbwebdev:9090/IFees?database=${selectedDatabase}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`, // Include token for authenticated request
+          },
+        }
+      );
 
-    setIFeesData(data);
-    setFilteredIFees(data);
-  } catch (error) {
-    console.error("Error fetching IFees data:", error);
-    alert("Error fetching IFees data. Check console for details.");
-  }
-};
+      if (!response.ok) {
+        throw new Error("Failed to fetch IFees data");
+      }
 
+      const data = await response.json();
+      console.log("Fetched data:", data); // Log received data
 
+      setIFeesData(data);
+      setFilteredIFees(data);
+    } catch (error) {
+      console.error("Error fetching IFees data:", error);
+      alert("Error fetching IFees data. Check console for details.");
+    }
+  };
 
+  // Function to switch tabs
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  };
 
   // Function to handle opening the login modal
   const openModal = () => {
@@ -96,21 +107,19 @@ const fetchIFeesData = async () => {
   };
 
   // Function to handle successful authentication
-const handleAuthenticationSuccess = (token, username) => {
-  console.log("Authentication Success: Token:", token, "Username:", username); // Log to confirm the token and username are correct
-  localStorage.setItem("authToken", token); // Store token locally
-  localStorage.setItem("username", username);
-  setIsAuthenticated(true); // This should enable the input fields
-  setEnteredBy(username); // Store the logged-in username
-  setIsModalOpen(false); // This should close the modal
+  const handleAuthenticationSuccess = (token, username) => {
+    console.log("Authentication Success: Token:", token, "Username:", username); // Log to confirm the token and username are correct
+    localStorage.setItem("authToken", token); // Store token locally
+    localStorage.setItem("username", username);
+    setIsAuthenticated(true); // This should enable the input fields
+    setEnteredBy(username); // Store the logged-in username
+    setIsModalOpen(false); // This should close the modal
 
-  if (deleteModeIntent) {
-    setShowDeleteMode(true); // Enable delete mode if delete was intended
-    setDeleteModeIntent(false); // Reset intent
-  }
-};
-
-
+    if (deleteModeIntent) {
+      setShowDeleteMode(true); // Enable delete mode if delete was intended
+      setDeleteModeIntent(false); // Reset intent
+    }
+  };
 
   const validateToken = (token) => {
     try {
@@ -128,7 +137,6 @@ const handleAuthenticationSuccess = (token, username) => {
     return false; // Token is invalid or expired
   };
 
-
   // Fetch data on component mount and when database changes
   useEffect(() => {
     const authToken = localStorage.getItem("authToken");
@@ -142,7 +150,6 @@ const handleAuthenticationSuccess = (token, username) => {
       localStorage.removeItem("authToken");
     }
   }, []);
-
 
   // Function to handle search
   const handleSearch = (searchTerm) => {
@@ -205,30 +212,69 @@ const handleAuthenticationSuccess = (token, username) => {
     });
   };
 
-  // Function to determine row background color based on description match
-  const getRowClass = (index) => {
-    const description = iFeesData[index].description.trim();
 
-    // Find all rows with the same description
-    const groupStart = iFeesData.findIndex(
-      (fee) => fee.description.trim() === description
-    );
+const sortedRows = [...rowsToDisplay].sort((a, b) => {
+  const descriptionA = a.description.trim().toLowerCase();
+  const descriptionB = b.description.trim().toLowerCase();
 
-    // Calculate the group number by counting distinct descriptions up to this point
-    const groupNumber = iFeesData
-      .slice(0, groupStart)
-      .reduce((count, fee, i, arr) => {
-        // Count only unique descriptions
-        return arr.findIndex(
-          (f) => f.description.trim() === fee.description.trim()
-        ) === i
-          ? count + 1
-          : count;
-      }, 0);
+  if (descriptionA < descriptionB) return -1;
+  if (descriptionA > descriptionB) return 1;
 
-    // Return the appropriate class based on the group number
-    return groupNumber % 2 === 0 ? styles.White : styles.lightGoldenrodYellow;
+  // Secondary sort by price (numerically)
+  const priceA = parseFloat(a.price);
+  const priceB = parseFloat(b.price);
+
+  return priceA - priceB; // Ascending order by price
+});
+
+
+  const displayRows = [...sortedRows].sort((a, b) => {
+    // Sort by End Date (ascending)
+    const endDateA = new Date(a.end_date);
+    const endDateB = new Date(b.end_date);
+
+    if (endDateA < endDateB) return -1;
+    if (endDateA > endDateB) return 1;
+
+    // Secondary sort by Price (ascending)
+    const priceA = parseFloat(a.price);
+    const priceB = parseFloat(b.price);
+
+    return priceA - priceB;
+  });
+
+
+
+  //Function to determine row color of table and grouping
+const getRowClass = (() => {
+  let currentGroupColor = styles.White; // Start with White
+  let lastGroupKey = null; // Track the last group key
+
+  return (fee) => {
+    // Group key is a combination of description and price
+    const groupKey = `${fee.description.trim()}-${fee.price}`;
+
+    // If the group key changes, alternate the group color
+    if (groupKey !== lastGroupKey) {
+      currentGroupColor =
+        currentGroupColor === styles.White
+          ? styles.lightGoldenrodYellow
+          : styles.White;
+      lastGroupKey = groupKey; // Update the last group key
+    }
+
+    return currentGroupColor;
   };
+})();
+
+
+
+
+
+
+
+
+
 
   // Function to handle form submission
   const handleSubmit = (e) => {
@@ -373,21 +419,18 @@ const handleAuthenticationSuccess = (token, username) => {
   };
 
   // Function to handle delete button click
-const handleDeleteButtonClick = () => {
-  const token = localStorage.getItem("authToken");
+  const handleDeleteButtonClick = () => {
+    const token = localStorage.getItem("authToken");
 
-  if (!token || !validateToken(token)) {
-    alert("Authentication required. Please log in.");
-    setDeleteModeIntent(true); // Track that delete mode was intended
-    openModal();
-    return;
-  }
+    if (!token || !validateToken(token)) {
+      alert("Authentication required. Please log in.");
+      setDeleteModeIntent(true); // Track that delete mode was intended
+      openModal();
+      return;
+    }
 
-  setShowDeleteMode(true); // Enable delete mode if authenticated
-};
-
-
-
+    setShowDeleteMode(true); // Enable delete mode if authenticated
+  };
 
   // Function to handle row selection
   const handleRowSelect = (index) => {
@@ -515,6 +558,24 @@ WEB PAGE #######################################################################
             Delete
           </button>
         </div>
+        <div className={styles.tabsContainer}>
+          <button
+            className={`${styles.tabButton} ${
+              activeTab === "Active" ? styles.activeTab : ""
+            }`}
+            onClick={() => handleTabChange("Active")}
+          >
+            Active
+          </button>
+          <button
+            className={`${styles.tabButton} ${
+              activeTab === "Inactive" ? styles.activeTab : ""
+            }`}
+            onClick={() => handleTabChange("Inactive")}
+          >
+            Inactive
+          </button>
+        </div>
         <table ref={tableRef} className={styles.table}>
           <thead>
             <tr className={styles.tableHeader}>
@@ -526,31 +587,28 @@ WEB PAGE #######################################################################
             </tr>
           </thead>
           <tbody>
-            {Array.isArray(filteredIFees) &&
-              filteredIFees.map((fee, index) => (
-                <tr
-                  key={index}
-                  className={`${styles.tableRow} ${getRowClass(index)}`}
-                >
-                  {showDeleteMode && (
-                    <td className={styles.tableCell}>
-                      <input
-                        type="checkbox"
-                        checked={selectedRows.includes(index)}
-                        onChange={() => handleRowSelect(index)}
-                      />
-                    </td>
-                  )}
-                  <td className={styles.tableCell}>{fee.description.trim()}</td>
-                  <td className={styles.tableCell}>{fee.price}</td>
+            {displayRows.map((fee, index) => (
+              <tr
+                key={index}
+                className={`${styles.tableRow} ${getRowClass(fee)}`}
+              >
+                {showDeleteMode && (
                   <td className={styles.tableCell}>
-                    {formatDate(fee.end_date)}
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.includes(index)}
+                      onChange={() => handleRowSelect(index)}
+                    />
                   </td>
-                  <td className={styles.tableCell}>
-                    {fee.membership_type.trim()}
-                  </td>
-                </tr>
-              ))}
+                )}
+                <td className={styles.tableCell}>{fee.description.trim()}</td>
+                <td className={styles.tableCell}>{fee.price}</td>
+                <td className={styles.tableCell}>{formatDate(fee.end_date)}</td>
+                <td className={styles.tableCell}>
+                  {fee.membership_type.trim()}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
