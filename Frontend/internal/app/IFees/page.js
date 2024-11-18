@@ -247,25 +247,42 @@ const sortedRows = [...rowsToDisplay].sort((a, b) => {
 
   //Function to determine row color of table and grouping
 const getRowClass = (() => {
-  let currentGroupColor = styles.White; // Start with White
-  let lastGroupKey = null; // Track the last group key
+  let currentGroupColorActive = styles.White; // Start Active rows with White
+  let currentGroupColorInactive = styles.expiredRowLight; // Start Inactive rows with Light Gray
+  let lastGroupKeyActive = null; // Track the last group key for Active rows
+  let lastGroupKeyInactive = null; // Track the last group key for Inactive rows
 
   return (fee) => {
+    const today = new Date().toISOString().split("T")[0];
+    const endDate = fee.end_date;
+
     // Group key is a combination of description and price
     const groupKey = `${fee.description.trim()}-${fee.price}`;
 
-    // If the group key changes, alternate the group color
-    if (groupKey !== lastGroupKey) {
-      currentGroupColor =
-        currentGroupColor === styles.White
-          ? styles.lightGoldenrodYellow
-          : styles.White;
-      lastGroupKey = groupKey; // Update the last group key
+    if (endDate < today) {
+      // Handle Inactive rows
+      if (groupKey !== lastGroupKeyInactive) {
+        currentGroupColorInactive =
+          currentGroupColorInactive === styles.expiredRowLight
+            ? styles.expiredRowDark
+            : styles.expiredRowLight;
+        lastGroupKeyInactive = groupKey; // Update last group key for Inactive
+      }
+      return currentGroupColorInactive;
+    } else {
+      // Handle Active rows
+      if (groupKey !== lastGroupKeyActive) {
+        currentGroupColorActive =
+          currentGroupColorActive === styles.White
+            ? styles.lightGoldenrodYellow
+            : styles.White;
+        lastGroupKeyActive = groupKey; // Update last group key for Active
+      }
+      return currentGroupColorActive;
     }
-
-    return currentGroupColor;
   };
 })();
+
 
 
 
