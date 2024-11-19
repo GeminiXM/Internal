@@ -1,6 +1,6 @@
 "use strict";
 import express from "express";
-import { getIFees, insertIFee } from "../controllers/db.controllers.js";
+import { getIFees, insertIFee, deleteIFee } from "../controllers/db.controllers.js";
 import {
   authenticateUser,
   isUserInIFeesGroup,
@@ -40,6 +40,9 @@ router.get("/IFees", getIFees);
 // Route for inserting IFees data
 router.post("/IFees", verifyToken, insertIFee);
 
+// Route for deleting an IFees record
+router.delete("/IFees", verifyToken, deleteIFee);
+
 // Route for handling user login
 router.post("/login", async (req, res) => {
   const { username, password } = req.body;
@@ -60,7 +63,7 @@ router.post("/login", async (req, res) => {
     }
 
     // Generate JWT token on successful authentication
-    const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: "1h" }); //expires in this many hours
+    const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: "24h" }); //expires in this many hours
 
     return res.status(200).json({
       message: "User authenticated and authorized",

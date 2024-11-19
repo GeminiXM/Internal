@@ -103,3 +103,53 @@ export const insertIFee = async (req, res, next) => {
     });
   }
 };
+
+// Function to insert a new IFees record
+export const deleteIFee = async (req, res, next) => {
+  console.log("Entering deleteIFee middleware");
+  const { description, endDate, price, enteredBy, database } = req.body;
+
+  if (!database) {
+    console.error("Database not selected. Cannot proceed with insertion.");
+    return res
+      .status(400)
+      .json({ message: "Error 400: Database not selected." });
+  }
+
+  console.log("Received data to insert:", {
+    description,
+    endDate,
+    price,
+    enteredBy,
+  });
+  console.log("Database selected:", database);
+
+  try {
+    const connection = await getConnection(database);
+
+    // Construct the SQL query to DELETE IFees record
+    const sqlQuery = `EXECUTE PROCEDURE web_proc_DeleteIFee('${description}', '${endDate}', ${price}, '${enteredBy}')`;
+    console.log("SQL Query to be executed:", sqlQuery);
+
+    // Execute the query
+    connection.query(sqlQuery, (err, result) => {
+      connection.close(); // Close the connection once the query is executed
+      if (err) {
+        console.error("Error executing delete query:", err);
+        return res.status(500).json({
+          message: "Error 500: Failed to delete new IFees record.",
+        });
+      }
+
+      console.log("Delete query executed successfully:", result);
+      return res
+        .status(200)
+        .json({ message: "IFees record deleted successfully" });
+    });
+  } catch (err) {
+    console.error("Error connecting to the Informix database:", err);
+    return res.status(500).json({
+      message: "Error 500: Internal server error in delete controller",
+    });
+  }
+};

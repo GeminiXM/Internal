@@ -26,11 +26,15 @@ const IFeesPage = () => {
   const [endDate, setEndDate] = useState("");
   const [endDateError, setEndDateError] = useState("");
   const [showModal, setShowModal] = useState(false); // State to control modal visibility
-  const [showDeleteMode, setShowDeleteMode] = useState(false);
-  const [selectedRows, setSelectedRows] = useState([]);
   const tableRef = useRef(null);
-  const [deleteModeIntent, setDeleteModeIntent] = useState(false);
   const [activeTab, setActiveTab] = useState("Active"); //Tabs
+const [editingRowIndex, setEditingRowIndex] = useState(null);
+const [editedRowData, setEditedRowData] = useState({});
+
+
+
+
+
   // Filter rows based on the selected tab
   const activeRows = filteredIFees.filter(
     (fee) => fee.end_date >= new Date().toISOString().split("T")[0]
@@ -41,11 +45,7 @@ const IFeesPage = () => {
 
   const rowsToDisplay = activeTab === "Active" ? activeRows : inactiveRows;
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchIFeesData(); // Fetch data only if authenticated
-    }
-  }, [selectedDatabase, isAuthenticated]);
+
 
   /* 
 #
@@ -55,40 +55,38 @@ FUNCTIONS ######################################################################
 */
 
   // Move the fetchIFeesData function to be declared outside useEffect, so it can be called anywhere in the component
-  const fetchIFeesData = async () => {
-    const token = localStorage.getItem("authToken");
-    if (!token) {
-      setIsAuthenticated(false);
-      return;
-    }
+useEffect(() => {
+  fetchIFeesData(); // Always fetch data when the component mounts or the selected database changes
+}, [selectedDatabase]);
 
-    try {
-      console.log("Attempting to fetch IFees data..."); // Add this line
-      const response = await fetch(
-        `http://vwbwebdev:9090/IFees?database=${selectedDatabase}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`, // Include token for authenticated request
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch IFees data");
+const fetchIFeesData = async () => {
+  try {
+    console.log("Attempting to fetch IFees data..."); // Add this line
+    const response = await fetch(
+      `http://vwbwebdev:9090/IFees?database=${selectedDatabase}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
       }
+    );
 
-      const data = await response.json();
-      console.log("Fetched data:", data); // Log received data
-
-      setIFeesData(data);
-      setFilteredIFees(data);
-    } catch (error) {
-      console.error("Error fetching IFees data:", error);
-      alert("Error fetching IFees data. Check console for details.");
+    if (!response.ok) {
+      throw new Error("Failed to fetch IFees data");
     }
-  };
+
+    const data = await response.json();
+    console.log("Fetched data:", data); // Log received data
+
+    setIFeesData(data);
+    setFilteredIFees(data);
+  } catch (error) {
+    console.error("Error fetching IFees data:", error);
+    alert("Error fetching IFees data. Check console for details.");
+  }
+};
+
 
   // Function to switch tabs
   const handleTabChange = (tab) => {
@@ -115,10 +113,7 @@ FUNCTIONS ######################################################################
     setEnteredBy(username); // Store the logged-in username
     setIsModalOpen(false); // This should close the modal
 
-    if (deleteModeIntent) {
-      setShowDeleteMode(true); // Enable delete mode if delete was intended
-      setDeleteModeIntent(false); // Reset intent
-    }
+
   };
 
   const validateToken = (token) => {
@@ -179,6 +174,16 @@ FUNCTIONS ######################################################################
     setFilteredIFees(filtered);
   };
 
+
+ 
+
+
+  const handleDeleteClick = (fee) => {
+    console.log("Deleting row:", fee);
+    // Add logic for deleting the fee row
+  };
+
+
   // Function to dynamically adjust column widths based on content
   useEffect(() => {
     if (tableRef.current) {
@@ -212,21 +217,19 @@ FUNCTIONS ######################################################################
     });
   };
 
+  const sortedRows = [...rowsToDisplay].sort((a, b) => {
+    const descriptionA = a.description.trim().toLowerCase();
+    const descriptionB = b.description.trim().toLowerCase();
 
-const sortedRows = [...rowsToDisplay].sort((a, b) => {
-  const descriptionA = a.description.trim().toLowerCase();
-  const descriptionB = b.description.trim().toLowerCase();
+    if (descriptionA < descriptionB) return -1;
+    if (descriptionA > descriptionB) return 1;
 
-  if (descriptionA < descriptionB) return -1;
-  if (descriptionA > descriptionB) return 1;
+    // Secondary sort by price (numerically)
+    const priceA = parseFloat(a.price);
+    const priceB = parseFloat(b.price);
 
-  // Secondary sort by price (numerically)
-  const priceA = parseFloat(a.price);
-  const priceB = parseFloat(b.price);
-
-  return priceA - priceB; // Ascending order by price
-});
-
+    return priceA - priceB; // Ascending order by price
+  });
 
   const displayRows = [...sortedRows].sort((a, b) => {
     // Sort by End Date (ascending)
@@ -243,55 +246,43 @@ const sortedRows = [...rowsToDisplay].sort((a, b) => {
     return priceA - priceB;
   });
 
-
-
   //Function to determine row color of table and grouping
-const getRowClass = (() => {
-  let currentGroupColorActive = styles.White; // Start Active rows with White
-  let currentGroupColorInactive = styles.expiredRowLight; // Start Inactive rows with Light Gray
-  let lastGroupKeyActive = null; // Track the last group key for Active rows
-  let lastGroupKeyInactive = null; // Track the last group key for Inactive rows
+  const getRowClass = (() => {
+    let currentGroupColorActive = styles.White; // Start Active rows with White
+    let currentGroupColorInactive = styles.expiredRowLight; // Start Inactive rows with Light Gray
+    let lastGroupKeyActive = null; // Track the last group key for Active rows
+    let lastGroupKeyInactive = null; // Track the last group key for Inactive rows
 
-  return (fee) => {
-    const today = new Date().toISOString().split("T")[0];
-    const endDate = fee.end_date;
+    return (fee) => {
+      const today = new Date().toISOString().split("T")[0];
+      const endDate = fee.end_date;
 
-    // Group key is a combination of description and price
-    const groupKey = `${fee.description.trim()}-${fee.price}`;
+      // Group key is a combination of description and price
+      const groupKey = `${fee.description.trim()}-${fee.price}`;
 
-    if (endDate < today) {
-      // Handle Inactive rows
-      if (groupKey !== lastGroupKeyInactive) {
-        currentGroupColorInactive =
-          currentGroupColorInactive === styles.expiredRowLight
-            ? styles.expiredRowDark
-            : styles.expiredRowLight;
-        lastGroupKeyInactive = groupKey; // Update last group key for Inactive
+      if (endDate < today) {
+        // Handle Inactive rows
+        if (groupKey !== lastGroupKeyInactive) {
+          currentGroupColorInactive =
+            currentGroupColorInactive === styles.expiredRowLight
+              ? styles.expiredRowDark
+              : styles.expiredRowLight;
+          lastGroupKeyInactive = groupKey; // Update last group key for Inactive
+        }
+        return currentGroupColorInactive;
+      } else {
+        // Handle Active rows
+        if (groupKey !== lastGroupKeyActive) {
+          currentGroupColorActive =
+            currentGroupColorActive === styles.White
+              ? styles.lightGoldenrodYellow
+              : styles.White;
+          lastGroupKeyActive = groupKey; // Update last group key for Active
+        }
+        return currentGroupColorActive;
       }
-      return currentGroupColorInactive;
-    } else {
-      // Handle Active rows
-      if (groupKey !== lastGroupKeyActive) {
-        currentGroupColorActive =
-          currentGroupColorActive === styles.White
-            ? styles.lightGoldenrodYellow
-            : styles.White;
-        lastGroupKeyActive = groupKey; // Update last group key for Active
-      }
-      return currentGroupColorActive;
-    }
-  };
-})();
-
-
-
-
-
-
-
-
-
-
+    };
+  })();
 
   // Function to handle form submission
   const handleSubmit = (e) => {
@@ -435,28 +426,36 @@ const getRowClass = (() => {
     }
   };
 
-  // Function to handle delete button click
-  const handleDeleteButtonClick = () => {
-    const token = localStorage.getItem("authToken");
 
-    if (!token || !validateToken(token)) {
-      alert("Authentication required. Please log in.");
-      setDeleteModeIntent(true); // Track that delete mode was intended
-      openModal();
-      return;
-    }
+const handleEditClick = (index, fee) => {
+  setEditingRowIndex(index);
+  setEditedRowData({ ...fee });
+};
 
-    setShowDeleteMode(true); // Enable delete mode if authenticated
-  };
+const handleCellChange = (field, value) => {
+  setEditedRowData((prevData) => ({
+    ...prevData,
+    [field]: value,
+  }));
+};
 
-  // Function to handle row selection
-  const handleRowSelect = (index) => {
-    if (selectedRows.includes(index)) {
-      setSelectedRows(selectedRows.filter((i) => i !== index));
-    } else {
-      setSelectedRows([...selectedRows, index]);
-    }
-  };
+const handleSaveClick = (index) => {
+  // Update the row data in your state
+  const updatedRows = [...iFeesData];
+  updatedRows[index] = editedRowData;
+  setIFeesData(updatedRows);
+
+  // Reset editing state
+  setEditingRowIndex(null);
+  setEditedRowData({});
+};
+
+const handleCancelClick = () => {
+  setEditingRowIndex(null);
+  setEditedRowData({});
+};
+
+
 
   /* 
 #
@@ -481,17 +480,28 @@ WEB PAGE #######################################################################
           <option value="NMSW">NMSW</option>
         </select>
 
-        {/* Separator */}
-        <hr style={{ margin: "20px 0", borderColor: "#ccc" }} />
-
-        {/* Button for New Enrollment */}
-        <button onClick={openModal} className={styles.enrollmentButton}>
-          Enter New Enrollment
-        </button>
+        {/* Section for New Enrollment */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          <button onClick={openModal} className={styles.enrollmentButton}>
+            Manage Enrollments
+          </button>
+          <div
+            style={{
+              marginTop: "20px" /* Adjust this value to move further down */,
+            }}
+          ></div>
+        </div>
 
         {/* Input Fields and Submit Button (visible after authentication) */}
         {isAuthenticated && (
           <form onSubmit={handleSubmit} style={{ marginTop: "20px" }}>
+            <label className={styles.enrollmentLabel}>
+              Enter New Enrollment
+            </label>
+
+            {/* Separator */}
+            <hr style={{ margin: "20px 0", borderColor: "#ccc" }} />
+
             {/* Price input */}
             <label htmlFor="price">Price:</label>
             <div className={styles.priceContainer}>
@@ -559,22 +569,10 @@ WEB PAGE #######################################################################
         <div className={styles.title}>
           Currently Active IFees (Enrollment) @ {selectedDatabase}
         </div>
-        <div
-          className={styles.top}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
+        <div className={styles.top}>
           <Search placeholder="Search ifees..." onSearch={handleSearch} />
-          <button
-            onClick={handleDeleteButtonClick}
-            className={styles.deleteButton}
-          >
-            Delete
-          </button>
         </div>
+
         <div className={styles.tabsContainer}>
           <button
             className={`${styles.tabButton} ${
@@ -596,7 +594,9 @@ WEB PAGE #######################################################################
         <table ref={tableRef} className={styles.table}>
           <thead>
             <tr className={styles.tableHeader}>
-              {showDeleteMode && <th className={styles.tableCell}>Select</th>}
+              {isAuthenticated && (
+                <th className={styles.tableCell}>Actions</th> // New header for buttons
+              )}
               <th className={styles.tableCell}>Description</th>
               <th className={styles.tableCell}>Price</th>
               <th className={styles.tableCell}>End Date</th>
@@ -609,21 +609,92 @@ WEB PAGE #######################################################################
                 key={index}
                 className={`${styles.tableRow} ${getRowClass(fee)}`}
               >
-                {showDeleteMode && (
+                {isAuthenticated && (
                   <td className={styles.tableCell}>
-                    <input
-                      type="checkbox"
-                      checked={selectedRows.includes(index)}
-                      onChange={() => handleRowSelect(index)}
-                    />
+                    {editingRowIndex === index ? (
+                      <>
+                        <button
+                          className={styles.saveButton}
+                          onClick={() => handleSaveClick(index)}
+                        >
+                          Save
+                        </button>
+                        <button
+                          className={styles.cancelButton}
+                          onClick={() => handleCancelClick()}
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          className={styles.editButton}
+                          onClick={() => handleEditClick(index, fee)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className={styles.deleteButton}
+                          onClick={() => handleDeleteClick(fee)}
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
                   </td>
                 )}
-                <td className={styles.tableCell}>{fee.description.trim()}</td>
-                <td className={styles.tableCell}>{fee.price}</td>
-                <td className={styles.tableCell}>{formatDate(fee.end_date)}</td>
-                <td className={styles.tableCell}>
-                  {fee.membership_type.trim()}
-                </td>
+                {editingRowIndex === index ? (
+                  <>
+                    <td className={styles.tableCell}>
+                      <input
+                        type="text"
+                        value={editedRowData.description || ""}
+                        onChange={(e) =>
+                          handleCellChange("description", e.target.value)
+                        }
+                        className={styles.formInput}
+                      />
+                    </td>
+                    <td className={styles.tableCell}>
+                      <input
+                        type="number"
+                        value={editedRowData.price || ""}
+                        onChange={(e) =>
+                          handleCellChange("price", e.target.value)
+                        }
+                        className={styles.formInput}
+                      />
+                    </td>
+                    <td className={styles.tableCell}>
+                      <input
+                        type="date"
+                        value={editedRowData.end_date || ""}
+                        onChange={(e) =>
+                          handleCellChange("end_date", e.target.value)
+                        }
+                        className={styles.formInput}
+                      />
+                    </td>
+                    <td className={styles.tableCell}>
+                      {/* Membership Type is displayed but not editable */}
+                      {fee.membership_type.trim()}
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td className={styles.tableCell}>
+                      {fee.description.trim()}
+                    </td>
+                    <td className={styles.tableCell}>{fee.price}</td>
+                    <td className={styles.tableCell}>
+                      {formatDate(fee.end_date)}
+                    </td>
+                    <td className={styles.tableCell}>
+                      {fee.membership_type.trim()}
+                    </td>
+                  </>
+                )}
               </tr>
             ))}
           </tbody>

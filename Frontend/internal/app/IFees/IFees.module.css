@@ -1,5 +1,4 @@
 /* Container for the whole page */
-/* Container for the whole page */
 .container {
   display: flex;
   flex-direction: row; /* Ensure panes are side by side */
@@ -108,6 +107,11 @@
   padding: 6px 10px; /* Add padding for better spacing */
   font-size: 14px; /* Slightly smaller font size */
   white-space: nowrap; /* Prevent text from wrapping */
+}
+
+.tableCell:first-child {
+  width: 40px; /* Set a fixed width for the "Actions" column */
+  text-align: left; /* Center-align buttons */
 }
 
 .tableRow {
@@ -281,6 +285,10 @@
   cursor: pointer;
 }
 
+
+
+
+
 /* Styling for Login button in modal to match the enrollment button */
 .loginButton {
   font-size: 1.2em; /* Make the button text larger */
@@ -320,23 +328,58 @@
 }
 
 
-.deleteButton {
-  background-color: #b50020; /* Complementary red */
-  color: white; /* Contrast for text */
-  border: none;
-  padding: 10px 20px;
+.enrollmentLabel {
   font-size: 16px;
-  border-radius: 5px;
+  font-weight: bold;
+  cursor: default;
+  color: #333; /* Customize the color as needed */
+}
+
+
+.editButton {
+  background-color: #0082b5; /* Blue background */
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  margin-right: 5px; /* Add spacing between buttons */
   cursor: pointer;
-  transition: background-color 0.3s ease;
+}
+
+.editButton:hover {
+  background-color: #006c90; /* Darker blue for hover effect */
+}
+
+.deleteButton {
+  background-color: #b50020; /* Red background */
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 .deleteButton:hover {
-  background-color: #800016; /* Darker shade on hover */
+  background-color: #800016; /* Darker red for hover effect */
 }
 
-.deleteButton:disabled {
-  background-color: #d6d6d6; /* Gray for disabled state */
-  color: #a0a0a0; /* Gray text for disabled state */
-  cursor: not-allowed;
+
+
+.saveButton {
+  background-color: green;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 5px;
+}
+
+.saveButton:hover {
+  background-color: darkgreen;
+}
+
+
+.cancelButton:hover {
+  background-color: darkred;
 }
